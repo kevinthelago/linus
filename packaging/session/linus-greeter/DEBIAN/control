@@ -1,0 +1,11 @@
+Package: linus-greeter
+Version: 0.1.0
+Architecture: all
+Maintainer: linus project <linus@example.com>
+Depends: greetd, gtkgreet, cage, linus-session
+Section: x11
+Priority: optional
+Description: linus greeter configuration (greetd + gtkgreet)
+ Ships the greetd config listing the mantle session as the default and the
+ plain-sway fallback, the gtkgreet CSS theme, the live-ISO autologin
+ drop-in, and the greetd PAM configuration.

@@ -1,0 +1,15 @@
+Package: linus-session
+Version: 0.1.0
+Architecture: all
+Maintainer: linus project <linus@example.com>
+Depends: sway, mantle, dbus-user-session, xdg-desktop-portal, xdg-desktop-portal-wlr, xdg-desktop-portal-gtk
+Recommends: swaynag, foot, hyprland, xdg-desktop-portal-hyprland
+Section: x11
+Priority: optional
+Description: linus session and compositor configuration layer
+ Provides the Wayland session entries, sway/Hyprland compositor drop-in
+ configs that autostart the mantle shell, session environment setup,
+ default mantle config and theme skeleton, and XDG portal configuration.
+ .
+ On failure, keeps the compositor alive with a visible recovery notice so
+ users are never left with a blank screen.

@@ -1,0 +1,7 @@
+[preferred]
+# wlr handles screen capture / screenshot for wlroots-based compositors.
+# gtk handles everything else (file chooser, app chooser, etc.).
+default=gtk
+org.freedesktop.impl.portal.ScreenCast=wlr
+org.freedesktop.impl.portal.Screenshot=wlr
+org.freedesktop.impl.portal.RemoteDesktop=wlr

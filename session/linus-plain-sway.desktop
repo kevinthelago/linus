@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=sway (plain)
+Comment=Sway compositor without mantle shell
+Exec=/usr/bin/sway
+Type=Application
+DesktopNames=sway

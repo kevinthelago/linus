@@ -1,0 +1,11 @@
+# Force LF line endings for all files that run on Linux targets.
+# Without this, core.autocrlf=true on Windows corrupts shebangs in shell scripts.
+
+* text=auto eol=lf
+
+# Explicitly mark binary formats so git never line-converts them.
+*.deb   binary
+*.iso   binary
+*.png   binary
+*.jpg   binary
+*.ico   binary

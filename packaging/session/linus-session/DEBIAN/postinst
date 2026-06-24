@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+# Make session/watchdog scripts executable
+chmod +x /usr/lib/linus/linus-session.sh
+chmod +x /usr/lib/linus/linus-hyprland-session.sh
+chmod +x /usr/lib/linus/mantle-watchdog.sh
+chmod +x /usr/lib/linus/mantle-watchdog-hypr.sh
+
+#DEBHELPER#

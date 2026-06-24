@@ -1,0 +1,18 @@
+# /etc/greetd/config.toml
+# greetd configuration for installed linus systems.
+# On live ISO images the systemd drop-in at
+# /etc/systemd/system/greetd.service.d/autologin.conf overrides ExecStart
+# to use autologin.toml instead.
+
+[terminal]
+# Use the next available VT; greetd manages the switch back on exit.
+vt = "next"
+
+[default_session]
+# gtkgreet runs under cage (a minimal Wayland compositor) so it gets its own
+# Wayland display isolated from the eventual user session.
+# -s  CSS stylesheet path
+# -e  read session entries from /usr/share/wayland-sessions/
+# -l  run in layer-shell fullscreen mode
+command = "cage -s -- gtkgreet -l -s /etc/greetd/gtkgreet.css -e"
+user = "greeter"

@@ -1,0 +1,39 @@
+# Default mantle configuration for linus.
+# Installed to /etc/skel/.config/mantle/config.toml so every new user gets
+# a working shell immediately. The per-user copy at ~/.config/mantle/config.toml
+# takes precedence; this file is only the initial seed.
+#
+# See the mantle project for the full configuration reference.
+
+[compositor]
+# "sway" or "hyprland" — detected automatically at runtime if unset.
+# backend = "sway"
+
+[bar]
+enabled = true
+position = "top"
+height = 40
+# Theme tokens are loaded from theme.toml in the same directory.
+
+[widgets]
+workspaces = true
+clock = true
+battery = true
+network = true
+audio = true
+notifications = true
+tray = true
+
+[launcher]
+enabled = true
+
+[notifications]
+enabled = true
+# Timeout in milliseconds; 0 = persistent until dismissed.
+timeout_ms = 5000
+
+[session]
+# Commands for session-level actions triggered from the mantle UI.
+lock_cmd = "swaylock"
+logout_cmd = "swaymsg exit"
+# suspend/hibernate handed off to systemd-logind

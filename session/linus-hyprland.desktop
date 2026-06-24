@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=linus (Hyprland)
+Comment=linus desktop environment with mantle shell on Hyprland
+Exec=/usr/lib/linus/linus-hyprland-session.sh
+Type=Application
+DesktopNames=linus;Hyprland

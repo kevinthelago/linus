@@ -1,0 +1,13 @@
+# /etc/greetd/autologin.toml
+# Live-ISO autologin configuration.
+# The linus live image activates this via a systemd drop-in that replaces
+# greetd's ExecStart to pass --config /etc/greetd/autologin.toml.
+# Installed systems use /etc/greetd/config.toml (the normal greeter).
+
+[terminal]
+vt = "next"
+
+[default_session]
+# Log straight into the linus session as the live user (no password prompt).
+command = "/usr/lib/linus/linus-session.sh"
+user = "user"

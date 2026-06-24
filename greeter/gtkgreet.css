@@ -1,0 +1,94 @@
+/* gtkgreet theme for linus.
+ * Matches the default mantle theme (Catppuccin Mocha palette).
+ * The branding stream can ship /usr/share/linus/branding-greetd.css and
+ * reference it from /etc/greetd/config.toml to replace this file without
+ * patching the package. */
+
+* {
+    color: #cdd6f4;
+    font-family: "Inter", "Noto Sans", sans-serif;
+    font-size: 14px;
+}
+
+window {
+    background-image: url("/usr/share/backgrounds/linus/default.jpg");
+    background-size: cover;
+    background-position: center;
+}
+
+/* Fallback when the wallpaper is absent */
+window.fallback {
+    background-color: #1e1e2e;
+}
+
+/* Login card */
+box#body {
+    background-color: rgba(24, 24, 37, 0.90);  /* mantle + alpha */
+    border: 1px solid rgba(180, 190, 254, 0.15); /* lavender/15 */
+    border-radius: 12px;
+    padding: 36px 40px;
+    min-width: 340px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Username / password inputs */
+entry {
+    background-color: #313244;  /* surface0 */
+    border: 1px solid #45475a;  /* surface2 */
+    border-radius: 6px;
+    color: #cdd6f4;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    caret-color: #89b4fa;
+}
+
+entry:focus {
+    border-color: #89b4fa;  /* blue accent */
+    box-shadow: 0 0 0 2px rgba(137, 180, 250, 0.2);
+}
+
+/* Session selector */
+combobox,
+combobox button {
+    background-color: #313244;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    color: #cdd6f4;
+    padding: 6px 12px;
+    margin-bottom: 14px;
+}
+
+combobox button:hover,
+combobox button:focus {
+    border-color: #89b4fa;
+    background-color: #45475a;
+}
+
+/* Login button */
+button.suggested-action {
+    background-color: #89b4fa;  /* blue */
+    color: #1e1e2e;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-weight: 600;
+    transition: background-color 120ms ease;
+}
+
+button.suggested-action:hover {
+    background-color: #b4befe;  /* lavender */
+}
+
+button.suggested-action:active {
+    background-color: #74c7ec;  /* sapphire */
+}
+
+/* Error / status messages */
+label.error {
+    color: #f38ba8;  /* red */
+}
+
+label.info {
+    color: #a6adc8;  /* subtext0 */
+    font-size: 12px;
+}

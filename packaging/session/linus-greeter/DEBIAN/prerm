@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+if systemctl is-active --quiet greetd 2>/dev/null; then
+    systemctl stop greetd || true
+fi
+
+#DEBHELPER#

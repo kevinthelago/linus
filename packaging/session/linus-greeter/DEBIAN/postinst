@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+# Create the greeter system user if it doesn't exist.
+# greetd requires a dedicated unprivileged user to run the greeter process.
+if ! id -u greeter >/dev/null 2>&1; then
+    adduser --system --no-create-home --home /var/lib/greetd \
+            --shell /bin/false --group greeter
+fi
+
+# Reload greetd if it's already running (e.g. on upgrade)
+if systemctl is-active --quiet greetd 2>/dev/null; then
+    systemctl restart greetd || true
+fi
+
+#DEBHELPER#

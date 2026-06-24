@@ -1,0 +1,6 @@
+#%PAM-1.0
+# PAM configuration for greetd on linus.
+# Delegates to the system login stack.
+auth    include    login
+account include    login
+session include    login

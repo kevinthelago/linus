@@ -1,0 +1,5 @@
+[preferred]
+# hyprland-xdg-desktop-portal handles screen capture; gtk handles the rest.
+default=gtk
+org.freedesktop.impl.portal.ScreenCast=hyprland
+org.freedesktop.impl.portal.Screenshot=hyprland

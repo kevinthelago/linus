@@ -1,0 +1,52 @@
+# Default linus theme for mantle.
+# Color tokens follow a surface/role model; override any key in
+# ~/.config/mantle/theme.toml to personalise without forking the whole file.
+# Palette: Catppuccin Mocha (dark), chosen as a neutral dark default.
+# The branding stream may ship a linus-specific palette that replaces this.
+
+[palette]
+rosewater = "#f5e0dc"
+flamingo  = "#f2cdcd"
+pink      = "#f5c2e7"
+mauve     = "#cba6f7"
+red       = "#f38ba8"
+maroon    = "#eba0ac"
+peach     = "#fab387"
+yellow    = "#f9e2af"
+green     = "#a6e3a1"
+teal      = "#94e2d5"
+sky       = "#89dceb"
+sapphire  = "#74c7ec"
+blue      = "#89b4fa"
+lavender  = "#b4befe"
+text      = "#cdd6f4"
+subtext1  = "#bac2de"
+subtext0  = "#a6adc8"
+overlay2  = "#9399b2"
+overlay1  = "#7f849c"
+overlay0  = "#6c7086"
+surface2  = "#585b70"
+surface1  = "#45475a"
+surface0  = "#313244"
+base      = "#1e1e2e"
+mantle    = "#181825"
+crust     = "#11111b"
+
+[colors]
+background = "base"
+surface    = "surface0"
+overlay    = "surface2"
+text       = "text"
+subtext    = "subtext1"
+accent     = "blue"
+warning    = "yellow"
+error      = "red"
+success    = "green"
+
+[bar]
+background_opacity = 0.92
+
+[font]
+family = "Inter, Noto Sans, sans-serif"
+size   = 14
+mono_family = "Noto Sans Mono, monospace"
