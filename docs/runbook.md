@@ -17,15 +17,17 @@ the pipeline overview.
 
 ### Automated path (normal releases)
 
-1. **Merge `develop` → `main`** via a PR. CI on `main` runs the full
-   `build-debs → build-iso → smoke → publish` pipeline automatically.
-2. The `publish` job:
+1. **Merge `develop` → `main`** via a PR. The three-workflow chain runs automatically:
+   - **Build**: `make ci-build` (packages + apt-repo + ISO)
+   - **Test**: lintian + QEMU smoke-boot (asserts greeter + mantle session)
+   - **Release**: signs ISO and checksums, publishes GitHub Release, pushes apt repo
+2. The Release workflow:
    - Tags the commit `vMAJOR.MINOR.PATCH`.
-   - Signs `dist/linus.iso` with the release key and publishes checksums.
-   - Creates a GitHub Release with the ISO, checksum, and apt key attached.
-   - Pushes the signed apt repo to the `gh-pages` branch at
-     `https://kevinthelago.github.io/linus/apt`.
-3. Verify the release page shows the correct assets and the apt repo is reachable.
+   - Signs `dist/linus.iso` → `dist/linus.iso.asc` and generates `dist/SHA256SUMS` + `dist/SHA256SUMS.asc`.
+   - Creates a GitHub Release with the ISO, signature, and checksums attached.
+   - Pushes the `stable` apt channel to gh-pages.
+3. Verify the release page shows all four assets and the apt repo is reachable at
+   `https://kevinthelago.github.io/linus/stable`.
 
 ### Choosing the version number
 
@@ -42,9 +44,14 @@ The version is set in `packages/linus-desktop/debian/changelog` and
 
 ### Pre-release from `develop`
 
-CI on `develop` builds and uploads the ISO as a workflow artifact but does **not** publish
-to GitHub Releases or the apt repo. Download the ISO artifact from the Actions run for
-testing.
+The same Build → Test → Release chain runs on `develop`. The Release workflow publishes a
+**nightly** pre-release to GitHub Releases (tagged `nightly`, marked as pre-release) and
+pushes the `testing` apt channel to gh-pages. Users tracking pre-releases add:
+
+```bash
+echo "deb https://kevinthelago.github.io/linus/testing trixie main" \
+  | sudo tee /etc/apt/sources.list.d/linus-testing.list
+```
 
 ## Bumping `mantle.pin`
 
@@ -82,27 +89,32 @@ Do this before every MINOR release to pick up security fixes in the base system.
 
 The GPG key is stored in two GitHub Actions secrets:
 
+Three GitHub Actions secrets gate signing:
+
 | Secret | Contents |
 |---|---|
-| `GPG_SIGNING_KEY` | ASCII-armored private key (or key fingerprint). `mk/apt.mk` imports armored material automatically at build time. |
-| `LINUS_GPG_KEY` | Fingerprint of the key after import, used by reprepro's `SignWith`. |
+| `GPG_SIGNING_KEY` | ASCII-armored private key. `mk/apt.mk` and the Release workflow import it automatically. |
+| `GPG_SIGNING_PASSPHRASE` | Passphrase for the key. Used by `mk/ci-sign`/`ci-checksums` and the Release workflow via `--passphrase-fd`. |
+| `LINUS_GPG_KEY` | Key fingerprint, used by reprepro's `SignWith` in `mk/apt.mk`. |
 
 To rotate the signing key:
 
 1. Generate a new key: `gpg --full-generate-key` (RSA 4096 or Ed25519, no expiry or
    long expiry).
-2. Export the armored private key:
+2. Export the armored private key and set a passphrase:
    ```bash
    gpg --export-secret-keys --armor <FINGERPRINT> > key.asc
    ```
-3. Update `GPG_SIGNING_KEY` in GitHub Secrets with the armored key content.
-4. Update `LINUS_GPG_KEY` in GitHub Secrets with the key fingerprint.
-5. Export and commit the **public** key:
+3. Update all three secrets in GitHub → Settings → Secrets → Actions:
+   - `GPG_SIGNING_KEY` ← contents of `key.asc`
+   - `GPG_SIGNING_PASSPHRASE` ← the key passphrase
+   - `LINUS_GPG_KEY` ← the key fingerprint
+4. Export and commit the **public** key:
    ```bash
    gpg --export --armor <FINGERPRINT> > apt/linus-release.gpg
    git add apt/linus-release.gpg && git commit -m "rotate: update release signing key"
    ```
-6. Announce the key rotation and provide the new fingerprint in the release notes.
+5. Announce the key rotation and provide the new fingerprint in the release notes.
 
 ## Rollback
 
@@ -124,12 +136,19 @@ deletes releases beyond that threshold (excluding pre-releases).
 
 ## apt repo structure
 
-The apt repo is hosted on GitHub Pages at `https://kevinthelago.github.io/linus/apt`:
+The apt repo is hosted on GitHub Pages with two channels:
+
+| Channel | URL | Source branch |
+|---|---|---|
+| `stable` | `https://kevinthelago.github.io/linus/stable` | `main` |
+| `testing` | `https://kevinthelago.github.io/linus/testing` | `develop` |
+
+Each channel has the same internal reprepro layout (codename `trixie`):
 
 ```
-apt/
+<channel>/
   dists/
-    trixie/            # codename (suite alias: stable) — published from main
+    trixie/
       Release
       Release.gpg
       InRelease
@@ -141,16 +160,17 @@ apt/
     main/
       l/linus-desktop/
       m/mantle/
-  linus-release.gpg    # public signing key
 ```
 
-Users add the repo with:
+The public signing key is at `https://kevinthelago.github.io/linus/stable/linus-release.gpg`.
+
+Users add the stable repo with:
 
 ```bash
-curl -fsSL https://kevinthelago.github.io/linus/apt/linus-release.gpg \
+curl -fsSL https://kevinthelago.github.io/linus/stable/linus-release.gpg \
   | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/linus.gpg
 
-echo "deb https://kevinthelago.github.io/linus/apt trixie main" \
+echo "deb https://kevinthelago.github.io/linus/stable trixie main" \
   | sudo tee /etc/apt/sources.list.d/linus.list
 
 sudo apt-get update
@@ -160,20 +180,29 @@ The codename `trixie` matches `apt/conf/distributions` (`Codename: trixie`). Sui
 
 ## Smoke test failures
 
-If the `smoke` CI job fails:
+If the **Test** CI workflow fails on `ci-smoke`:
 
-1. Download the ISO artifact from the failed run.
-2. Boot it locally:
+1. Download the `dist/` artifact from the **Build** run that triggered it.
+2. Reproduce locally with the smoke-boot harness:
    ```bash
-   qemu-system-x86_64 -m 2048 -cdrom linus.iso -enable-kvm \
+   make ci-smoke   # builds binary + runs against dist/linus.iso
+   ```
+   Or run the binary directly for more verbosity:
+   ```bash
+   target/release/smoke-boot \
+     --iso dist/linus.iso --timeout 300 \
+     --marker "greetd" --marker "mantle"
+   ```
+3. For a quick interactive look at the serial console:
+   ```bash
+   qemu-system-x86_64 -m 2048 -cdrom dist/linus.iso -enable-kvm \
      -nographic -serial mon:stdio
    ```
-3. Check the smoke harness logs in the CI job output — the harness asserts specific
-   markers in the serial output (greeter started, session listed).
-4. Common causes:
-   - mantle binary not found at the expected path (update the session entry)
-   - greetd config references a session file that doesn't exist
-   - PipeWire/D-Bus not started before mantle (check systemd unit ordering)
+4. Check the CI job output for the harness log lines (`[smoke-boot] ...`).
+5. Common causes:
+   - `greetd` marker missing: greetd failed to start (check unit ordering, PAM config)
+   - `mantle` marker missing: mantle binary not on PATH or session entry wrong
+   - Timeout: PipeWire/D-Bus not ready before mantle (check systemd unit ordering)
 
 ## Cross-references
 

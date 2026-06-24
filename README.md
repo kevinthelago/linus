@@ -21,7 +21,8 @@ sha256sum -c linus-<version>.iso.sha256
 sudo dd if=linus-<version>.iso of=/dev/sdX bs=4M status=progress && sync
 ```
 
-The apt repository is hosted at `https://kevinthelago.github.io/linus/apt`.
+The apt repository is hosted at `https://kevinthelago.github.io/linus/stable` (stable) and
+`https://kevinthelago.github.io/linus/testing` (nightly builds from `develop`).
 
 ## Install
 
@@ -63,7 +64,7 @@ The finished ISO is written to `dist/linus.iso`. See [docs/build.md](docs/build.
 ### Smoke test
 
 ```bash
-make smoke         # boots the ISO in QEMU and asserts it reaches the greeter
+make ci-smoke      # builds smoke-boot binary, boots the ISO in QEMU, asserts greeter + mantle
 ```
 
 ## Documentation

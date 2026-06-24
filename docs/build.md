@@ -89,6 +89,43 @@ To build all packages without running the ISO build:
 make session greeter branding installer-deb meta-package apt-repo
 ```
 
+### CI targets (`mk/ci.mk`)
+
+These targets mirror what GitHub Actions runs, so you can reproduce CI locally:
+
+| Target | What it does |
+|---|---|
+| `make ci-build` | `make packages apt-repo iso` — full artifact build |
+| `make ci-lint` | Run lintian on all `dist/*.deb` (fails on any error) |
+| `make ci-smoke` | Build the smoke-boot binary then boot the ISO in QEMU headless and assert markers |
+| `make ci-test` | `ci-lint` + `ci-smoke` |
+| `make ci-sign` | GPG detach-sign `dist/linus.iso` → `dist/linus.iso.asc` (requires `$GPG_SIGNING_PASSPHRASE`) |
+| `make ci-checksums` | Generate and sign `dist/SHA256SUMS` |
+
+## Smoke-boot harness
+
+The QEMU smoke-boot harness is a Rust crate at `tools/smoke-boot/` in a Cargo workspace
+(root `Cargo.toml`). The compiled binary lands at `target/release/smoke-boot`.
+
+```bash
+# Build the binary (workspace root)
+cargo build --manifest-path tools/smoke-boot/Cargo.toml --release
+
+# Run against a local ISO
+target/release/smoke-boot \
+  --iso dist/linus.iso \
+  --timeout 300 \
+  --marker "greetd" \
+  --marker "mantle"
+```
+
+The harness boots the ISO headless in `qemu-system-x86_64` with a serial console and QMP
+socket. It scans the serial output for each `--marker` string, and exits 0 only when all
+markers appear before `--timeout` seconds elapses. QEMU is shut down gracefully via QMP
+after the check completes (or forcefully killed on timeout).
+
+`make ci-smoke` wraps this with the standard markers and the `dist/linus.iso` path.
+
 ## live-build config (`config/`)
 
 The `config/` directory is the live-build config root:

@@ -123,11 +123,17 @@ Failure modes:
 
 ### 6. CI/CD (GitHub Actions)
 
-| Job | Trigger | Steps |
+Three chained workflows run on every push to `feature/**`, `develop`, and `main`:
+
+| Workflow | Trigger | Steps |
 |---|---|---|
-| `build-debs` | push to `develop`/`main`, PR | build component `.deb`s + `make apt-repo` → upload artifacts |
-| `build-iso` | after `build-debs` passes | `make iso` → upload ISO artifact |
-| `publish` | push to `main`, green build | sign + push apt repo to gh-pages; create GitHub Release |
+| **Build** (`.github/workflows/build.yml`) | push / PR | `make ci-build` (packages + apt-repo + ISO); upload `dist/` and `smoke-boot` binary as artifacts |
+| **Test** (`.github/workflows/test.yml`) | after Build succeeds | `make ci-lint` (lintian) + `make ci-smoke` (QEMU headless boot, asserts `greetd` and `mantle` markers) |
+| **Release** (`.github/workflows/release.yml`) | after Test succeeds (develop/main only) | sign ISO + checksums; publish GitHub Release (`nightly` from develop, `vX.Y.Z` from main); push apt repo to gh-pages |
+
+The **smoke-boot** harness (`tools/smoke-boot/`) is a Rust binary compiled by CI. It boots
+`dist/linus.iso` in QEMU headless and scans the serial console for required text markers.
+See [build.md](build.md#smoke-boot-harness) for local usage.
 
 See [runbook.md](runbook.md) for the release flow.
 
@@ -151,7 +157,12 @@ CI: make meta-package apt-repo
 CI: make iso
   └─ lb config (trixie snapshot + dist/apt/ linus repo)
   └─ lb build
-  └─ dist/linus.iso
+  └─ dist/linus.iso + dist/linus.iso.sha256
+
+CI: make ci-smoke
+  └─ cargo build → tools/smoke-boot/target/release/smoke-boot
+  └─ qemu-system-x86_64 (headless, serial QMP)
+  └─ assert: "greetd" + "mantle" appear on serial console
 ```
 
 ### Boot → desktop
