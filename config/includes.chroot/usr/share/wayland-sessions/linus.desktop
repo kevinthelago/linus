@@ -1,7 +1,6 @@
 [Desktop Entry]
-Name=linus
-Comment=linus desktop session (sway + mantle)
-Exec=sway
+Name=linus (mantle)
+Comment=linus desktop environment with mantle shell
+Exec=/usr/lib/linus/linus-session.sh
 Type=Application
-DesktopNames=linus
-Keywords=wayland;sway;mantle;
+DesktopNames=linus;sway

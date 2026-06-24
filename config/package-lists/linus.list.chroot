@@ -1,9 +1,11 @@
 # linus live image — chroot package list
 # Packages here are installed into the squashfs (the live system).
 #
-# Phase 1: sway autologin + mantle runtime deps.
-# Phase 2: add calamares (installer), linus-desktop meta-package.
-# Phase 2: replace this list with `linus-desktop` once the packaging stream ships it.
+# Phase 1: sway + greetd autologin + mantle runtime deps.
+# Phase 2: add linus-desktop (meta) which pulls linus-session and linus-greeter
+#          from the linus apt repo, plus calamares for the graphical installer.
+#
+# See contracts/system-packages.md for the authoritative pinned package set.
 
 # --- Wayland compositor ---
 sway
@@ -11,8 +13,15 @@ swayidle
 swaylock
 swaybg
 
-# --- Terminal (live session fallback if mantle is absent) ---
+# --- Terminal (live fallback when mantle is absent) ---
 foot
+
+# --- Greeter / session manager ---
+# greetd: Phase 1 autologin + Phase 2 gtkgreet graphical greeter
+# cage: Wayland kiosk compositor for gtkgreet (Phase 2)
+greetd
+cage
+gtkgreet
 
 # --- Audio ---
 pipewire
@@ -33,18 +42,17 @@ xdg-desktop-portal-gtk
 dbus-user-session
 polkit
 policykit-1-gnome
-systemd
 
 # --- Fonts ---
 fonts-noto-core
 fonts-noto-color-emoji
 
-# --- Browser & file manager ---
+# --- Browser and file manager ---
 firefox-esr
 thunar
 
 # --- mantle runtime dependencies ---
-# (mantle itself comes from the linus apt repo; these satisfy its Tauri 2 Depends)
+# mantle itself comes from the linus apt repo; these are its Tauri 2 runtime Depends.
 libwebkit2gtk-4.1-0
 libayatana-appindicator3-1
 
@@ -58,3 +66,9 @@ slurp
 curl
 wget
 git
+
+# --- linus packages (from linus apt repo via LINUS_REPO_URL) ---
+# Uncommented automatically when the apt repo is configured.
+# linus-session
+# linus-greeter
+# linus-desktop

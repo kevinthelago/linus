@@ -1,18 +1,86 @@
 #!/bin/sh
 # 0100-autologin.hook.chroot
-# Phase 1 autologin: configure getty@tty1 to log in the live user automatically.
-# Phase 2 (desktop stream): remove this hook and replace with greetd+gtkgreet.
+#
+# Phase 1 autologin: configure greetd to boot the live user straight into the
+# linus session without prompting for credentials.
+#
+# If linus-greeter is already installed (from the linus apt repo), its package
+# provides the autologin config; this hook does nothing.  If not, we install
+# fallback stubs so the ISO remains bootable during Phase 1.
 set -eu
 
-LIVE_USER="user"
+# --- Skip if linus-greeter already handles this ---
+if dpkg -l linus-greeter 2>/dev/null | grep -q '^ii'; then
+    echo "[autologin] linus-greeter installed — skipping fallback setup"
+    exit 0
+fi
 
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf <<'UNIT'
+echo "[autologin] Installing Phase 1 greetd autologin fallback..."
+
+# -- /etc/greetd/autologin.toml --
+# Points greetd at the linus session script and autologins as the live user.
+mkdir -p /etc/greetd
+cat > /etc/greetd/autologin.toml <<'TOML'
+# linus live-ISO greetd autologin config (Phase 1 fallback).
+# linus-greeter replaces this on installed systems.
+
+[terminal]
+vt = "next"
+
+[default_session]
+command = "/usr/lib/linus/linus-session.sh"
+user = "user"
+TOML
+
+# -- systemd drop-in: switch greetd to the autologin config --
+mkdir -p /etc/systemd/system/greetd.service.d
+cat > /etc/systemd/system/greetd.service.d/autologin.conf <<'UNIT'
+# Override greetd ExecStart to use the live-ISO autologin config.
+# Removed by linus-greeter's postinst on installed systems.
+
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin user --noclear %I linux
-Type=simple
+ExecStart=/usr/sbin/greetd --config /etc/greetd/autologin.toml
 UNIT
 
-# Ensure the tty1 getty is enabled (it is by default, but be explicit).
-systemctl enable getty@tty1.service 2>/dev/null || true
+# -- Phase 1 session stub: a minimal linus-session.sh --
+# linus-session package provides the authoritative version; this is a
+# build-time fallback so the ISO can boot without the linus apt repo.
+mkdir -p /usr/lib/linus
+cat > /usr/lib/linus/linus-session.sh <<'SH'
+#!/bin/sh
+# linus session wrapper — Phase 1 stub (replaced by linus-session package).
+
+export XDG_CURRENT_DESKTOP=sway
+export XDG_SESSION_DESKTOP=linus
+export XDG_SESSION_TYPE=wayland
+export QT_QPA_PLATFORM=wayland
+export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+export GDK_BACKEND=wayland
+export MOZ_ENABLE_WAYLAND=1
+export GTK_USE_PORTAL=1
+
+exec /usr/bin/sway
+SH
+chmod 755 /usr/lib/linus/linus-session.sh
+
+# -- Phase 1 sway drop-in: autostart mantle under sway --
+# linus-session installs /etc/sway/config.d/90-mantle.conf; this fallback
+# uses the same path only if linus-session isn't installed yet.
+if ! dpkg -l linus-session 2>/dev/null | grep -q '^ii'; then
+    mkdir -p /etc/sway/config.d
+    cat > /etc/sway/config.d/90-mantle.conf <<'SWAY'
+# linus mantle autostart — Phase 1 fallback (replaced by linus-session).
+
+exec dbus-update-activation-environment --systemd \
+    DISPLAY WAYLAND_DISPLAY SWAYSOCK \
+    XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP XDG_SESSION_TYPE
+
+exec systemctl --user import-environment \
+    DISPLAY WAYLAND_DISPLAY SWAYSOCK \
+    XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP XDG_SESSION_TYPE
+
+# Launch mantle; fall back to foot terminal so the screen is never blank.
+exec sh -c 'command -v mantle >/dev/null 2>&1 && exec mantle; exec foot'
+SWAY
+fi

@@ -10,13 +10,16 @@ set -eu
 SNAPSHOT_DEB="http://snapshot.debian.org/archive/debian/${SNAPSHOT_DATE}/"
 SNAPSHOT_SEC="http://snapshot.debian.org/archive/debian-security/${SNAPSHOT_DATE}/"
 
-# Generate linus apt archive source if a repo URL is provided.
-mkdir -p config/archives
+# Generate linus apt archive source and package list if a repo URL is provided.
+mkdir -p config/archives config/package-lists
 if [ -n "${LINUS_REPO_URL:-}" ]; then
     printf 'deb [trusted=yes] %s linus main\n' "${LINUS_REPO_URL}" \
         > config/archives/linus.list.chroot
+    # Install the full linus desktop stack from the apt repo.
+    printf 'linus-desktop\n' > config/package-lists/linus-packages.list.chroot
 else
     rm -f config/archives/linus.list.chroot
+    rm -f config/package-lists/linus-packages.list.chroot
 fi
 
 lb config noauto \
