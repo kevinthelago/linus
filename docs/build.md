@@ -37,44 +37,76 @@ Both files are committed to the repository. CI enforces that builds use the pinn
 
 ## `make` targets
 
+Run `make help` to list all targets from the `mk/*.mk` includes.
+
+### Component package builds
+
 | Target | What it does |
 |---|---|
-| `make iso` | Full build: mantle.deb → linus-desktop.deb → lb build → `dist/linus.iso` |
-| `make mantle-deb` | Check out mantle at `mantle.pin`, run `npm ci && npm run tauri:build`, repackage the Tauri-emitted `.deb` with the session entry and linus deps, write to `dist/packages/`. |
-| `make linus-deb` | Build the `linus-desktop` meta-package `.deb` (depends on mantle + compositor + session stack). |
-| `make apt-repo` | Populate the local `dist/apt/` reprepro tree from `dist/packages/*.deb`. Signs with the key in `$LINUS_GPG_KEY` (unsigned with a warning if unset). |
-| `make iso` | Runs `lb build` over the `lb/` config, pulling packages from `dist/apt/` + the pinned trixie snapshot. Output: `dist/linus.iso`. |
-| `make smoke` | Boots `dist/linus.iso` in QEMU headless and asserts the ISO reaches the greeter and a mantle session is selectable (Rust harness in `tests/smoke/`). |
-| `make clean` | Remove `dist/` and `lb/.build/` build artefacts. Does not remove `dist/packages/` (mantle.deb is expensive to rebuild). |
-| `make clean-all` | Remove everything including cached packages. |
+| `make session` | Build `linus-session_*.deb` from `session/` into `dist/packages/`. |
+| `make greeter` | Build `linus-greeter_*.deb` from `greeter/` into `dist/packages/`. |
+| `make branding` | Build `linus-branding_*.deb` from `branding/` into `dist/packages/`. |
+| `make installer-deb` | Build `calamares-settings-linus_*.deb` from `installer/` into `dist/packages/`. |
+| `make installer-check` | Validate YAML/shell syntax of all Calamares config files (runs automatically before `installer-deb`). |
+| `make meta-package` | Build `linus-desktop_*.deb` (the meta-package) from `packaging/meta/` into `dist/packages/`. |
+| `make backport-hyprland` | Build Hyprland `.deb`s from Debian sid source via `backports/hyprland/recipe.sh`. |
+
+> **mantle package**: the `mantle` `.deb` is built by the `mantle-pkg` stream and fetched as
+> a CI artifact. To build it locally, see `contracts/mantle-integration.md`.
+
+### Repository and image
+
+| Target | What it does |
+|---|---|
+| `make apt-repo` | Populate `dist/apt/` (reprepro) from `dist/packages/*.deb`. Signs with `$LINUS_GPG_KEY` or `$GPG_SIGNING_KEY`; unsigned with a warning if neither is set. |
+| `make iso` | Full ISO build: `iso-clean` → `iso-config` → `iso-build`. Requires root or a privileged container (loop devices). |
+| `make iso-config` | Run `lb config` only — reads `config/auto/config`, injects the snapshot and linus repo URL. |
+| `make iso-build` | Run `lb build` only; outputs `dist/linus.iso` + `dist/linus.iso.sha256`. Must run as root. |
+| `make iso-clean` | Remove live-build artefacts (`lb clean --purge` + `dist/linus.iso`). |
+| `make iso-size` | Report ISO size vs the 2 048 MiB budget. |
+
+### Cleanup (per component)
+
+Each component exposes a `*-clean` target (`session-clean`, `greeter-clean`, `branding-clean`,
+`installer-clean`, `meta-package-clean`, `apt-repo-clean`). There is no single top-level
+`make clean` — run each component's clean target explicitly, or chain them:
+
+```bash
+make session-clean greeter-clean branding-clean installer-clean meta-package-clean apt-repo-clean iso-clean
+```
 
 ### Fast iteration
 
-To skip the mantle rebuild when only changing packaging or session config:
+To rebuild only packaging and session files without touching mantle:
 
 ```bash
-make linus-deb apt-repo iso
+make session greeter branding installer-deb meta-package apt-repo iso
 ```
 
-To skip the full ISO build and only run the package builds:
+To build all packages without running the ISO build:
 
 ```bash
-make mantle-deb linus-deb apt-repo
+make session greeter branding installer-deb meta-package apt-repo
 ```
 
-## live-build config (`lb/`)
+## live-build config (`config/`)
 
-The `lb/` directory is the `live-build` config root:
+The `config/` directory is the live-build config root:
 
 ```
-lb/
-  config/
-    archives/   # linus apt source pointing at dist/apt/
-    hooks/      # chroot hooks (branding, session wiring, greeter config)
-    package-lists/
-      linus.list.chroot   # installs linus-desktop + Calamares from the linus apt source
+config/
   auto/
-    config      # lb config entrypoint (sets the trixie snapshot, architecture, etc.)
+    config      # lb config entrypoint (injects snapshot date, arch, linus repo URL)
+    build       # lb build hook
+    clean       # lb clean hook
+  hooks/live/
+    0100-autologin.hook.chroot    # enable autologin for the live session
+    0200-session.hook.chroot      # wire the linus session entry
+    9500-grub-brand.hook.binary   # inject linus GRUB theme
+  includes.chroot/
+    usr/share/wayland-sessions/   # linus.desktop session entry shipped into the chroot
+  package-lists/
+    linus.list.chroot             # installs linus-desktop from the linus apt source
 ```
 
 The live image uses **autologin** to the `linus` user for the live session; the installed
@@ -99,9 +131,9 @@ checksum.
 The apt repository and ISO checksum are signed with the linus release GPG key. The public key
 is distributed at `https://kevinthelago.github.io/linus/apt/linus-release.gpg`.
 
-Locally, set `LINUS_GPG_KEY` to your key fingerprint before running `make apt-repo`. The
-key is only available in CI via a GitHub Actions secret; local builds produce an unsigned
-repo with a warning, which is fine for development.
+Locally, set `LINUS_GPG_KEY` to your key fingerprint before running `make apt-repo`. In CI
+the secret is named `GPG_SIGNING_KEY`; `mk/apt.mk` accepts either variable. Local builds
+without a key produce an unsigned repo with a warning, which is fine for development.
 
 ## CI
 

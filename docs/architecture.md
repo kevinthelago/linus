@@ -112,11 +112,12 @@ Failure modes:
 
 ### 5. Image build pipeline (`live-build`)
 
-`make iso` drives `lb build` over the `lb/` config:
+`make iso` drives `lb build` over the `config/` directory:
 
 1. `debootstrap` a trixie chroot from the pinned `snapshot.debian.org` snapshot.
-2. Install `linus-desktop` and `Calamares` from the local `dist/apt/` reprepro tree.
-3. Run chroot hooks: apply branding, set the greeter to autologin in the live session.
+2. Install `linus-desktop` and Calamares from the local `dist/apt/` reprepro tree.
+3. Run chroot hooks: apply branding (`9500-grub-brand`), wire the session entry
+   (`0200-session`), enable autologin for the live session (`0100-autologin`).
 4. Assemble a hybrid GRUB/UEFI ISO with a branded boot menu.
 5. Output: `dist/linus.iso` (bootable on UEFI and BIOS, runnable in QEMU).
 
@@ -124,10 +125,9 @@ Failure modes:
 
 | Job | Trigger | Steps |
 |---|---|---|
-| `build-debs` | push to `develop`/`main`, PR | `make mantle-deb linus-deb apt-repo` → upload to artifacts |
+| `build-debs` | push to `develop`/`main`, PR | build component `.deb`s + `make apt-repo` → upload artifacts |
 | `build-iso` | after `build-debs` passes | `make iso` → upload ISO artifact |
-| `smoke` | after `build-iso` | `make smoke` (QEMU headless boot, asserts greeter + session) |
-| `publish` | push to `main`, green `smoke` | sign + push apt repo to gh-pages; create GitHub Release |
+| `publish` | push to `main`, green build | sign + push apt repo to gh-pages; create GitHub Release |
 
 See [runbook.md](runbook.md) for the release flow.
 
@@ -136,23 +136,22 @@ See [runbook.md](runbook.md) for the release flow.
 ### Build → ISO
 
 ```
-CI: make mantle-deb
-  └─ checkout mantle@<mantle.pin>
-  └─ npm ci && npm run tauri:build
-  └─ repackage .deb with session entry + linus deps
-  └─ dist/packages/mantle_*.deb
+CI: make session greeter branding installer-deb
+  └─ dist/packages/linus-session_*.deb
+  └─ dist/packages/linus-greeter_*.deb
+  └─ dist/packages/linus-branding_*.deb
+  └─ dist/packages/calamares-settings-linus_*.deb
 
-CI: make linus-deb apt-repo
+CI: (mantle-pkg stream) → dist/packages/mantle_*.deb
+
+CI: make meta-package apt-repo
   └─ dist/packages/linus-desktop_*.deb
-  └─ dist/apt/ (reprepro)
+  └─ dist/apt/ (reprepro, codename: trixie)
 
 CI: make iso
-  └─ lb build (trixie snapshot + dist/apt/)
+  └─ lb config (trixie snapshot + dist/apt/ linus repo)
+  └─ lb build
   └─ dist/linus.iso
-
-CI: make smoke
-  └─ qemu-system-x86_64 -cdrom dist/linus.iso
-  └─ assert: greeter visible, mantle session listed
 ```
 
 ### Boot → desktop
@@ -184,24 +183,29 @@ installed system → GRUB → systemd → greetd → mantle session (same as abo
 
 ```
 linus/
-  lb/                  # live-build config
-    config/
-      archives/        # apt sources
-      hooks/           # chroot hooks
-      package-lists/
-    auto/config
-  packages/
-    mantle/            # mantle .deb packaging recipe
-    linus-desktop/     # meta-package
-    linus-session/     # session glue files
-    linus-branding/    # branding assets
-  tests/
-    smoke/             # Rust QEMU smoke-boot harness
+  config/              # live-build config root
+    auto/              # lb auto scripts (config, build, clean)
+    hooks/live/        # chroot and binary hooks
+    includes.chroot/   # files copied verbatim into the chroot
+    package-lists/     # apt package lists for the live image
+  branding/            # linus branding assets (icons, wallpaper, GRUB theme, Plymouth, tokens.css)
+  session/             # session scripts, compositor configs, mantle defaults (skel)
+  greeter/             # greetd + gtkgreet config and PAM
+  installer/           # Calamares settings and post-install hook
+  packaging/
+    meta/              # linus-desktop meta-package (debian/ layout)
+    branding/          # linus-branding package (debian/ layout)
+    session/           # linus-session and linus-greeter DEBIAN/ stubs
+  mk/                  # Makefile fragments (one per build component)
+  backports/
+    hyprland/          # Hyprland backport recipe from Debian sid
+  apt/
+    conf/              # reprepro distributions config
   contracts/           # integration seam documents (source of truth)
   docs/                # this documentation
-  Makefile
-  mantle.pin
-  snapshot.pin
+  Makefile             # thin dispatcher: include mk/*.mk
+  mantle.pin           # pinned mantle commit SHA
+  snapshot.pin         # pinned Debian trixie snapshot date
 ```
 
 ## Cross-references

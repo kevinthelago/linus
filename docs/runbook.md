@@ -42,9 +42,9 @@ The version is set in `packages/linus-desktop/debian/changelog` and
 
 ### Pre-release from `develop`
 
-CI on `develop` publishes to a **testing** apt suite (`linus-testing`) automatically.
-Pre-release ISOs are not published to GitHub Releases — download them from the CI artifact
-store for testing.
+CI on `develop` builds and uploads the ISO as a workflow artifact but does **not** publish
+to GitHub Releases or the apt repo. Download the ISO artifact from the Actions run for
+testing.
 
 ## Bumping `mantle.pin`
 
@@ -80,24 +80,29 @@ Do this before every MINOR release to pick up security fixes in the base system.
 
 ## Signing
 
-The release GPG key fingerprint is stored in the `LINUS_GPG_KEY_ID` GitHub Actions secret.
-The private key material is in `LINUS_GPG_KEY_BASE64` (base64-encoded, armored export).
+The GPG key is stored in two GitHub Actions secrets:
+
+| Secret | Contents |
+|---|---|
+| `GPG_SIGNING_KEY` | ASCII-armored private key (or key fingerprint). `mk/apt.mk` imports armored material automatically at build time. |
+| `LINUS_GPG_KEY` | Fingerprint of the key after import, used by reprepro's `SignWith`. |
 
 To rotate the signing key:
 
 1. Generate a new key: `gpg --full-generate-key` (RSA 4096 or Ed25519, no expiry or
    long expiry).
-2. Export and base64-encode the private key:
+2. Export the armored private key:
    ```bash
-   gpg --export-secret-keys --armor <FINGERPRINT> | base64 > key.b64
+   gpg --export-secret-keys --armor <FINGERPRINT> > key.asc
    ```
-3. Update `LINUS_GPG_KEY_ID` and `LINUS_GPG_KEY_BASE64` in GitHub Secrets.
-4. Export and commit the **public** key:
+3. Update `GPG_SIGNING_KEY` in GitHub Secrets with the armored key content.
+4. Update `LINUS_GPG_KEY` in GitHub Secrets with the key fingerprint.
+5. Export and commit the **public** key:
    ```bash
    gpg --export --armor <FINGERPRINT> > apt/linus-release.gpg
    git add apt/linus-release.gpg && git commit -m "rotate: update release signing key"
    ```
-5. Announce the key rotation and provide the new fingerprint in the release notes.
+6. Announce the key rotation and provide the new fingerprint in the release notes.
 
 ## Rollback
 
@@ -124,7 +129,7 @@ The apt repo is hosted on GitHub Pages at `https://kevinthelago.github.io/linus/
 ```
 apt/
   dists/
-    linus/             # stable (from main)
+    trixie/            # codename (suite alias: stable) — published from main
       Release
       Release.gpg
       InRelease
@@ -132,8 +137,6 @@ apt/
         binary-amd64/
           Packages
           Packages.gz
-    linus-testing/     # pre-release (from develop)
-      ...
   pool/
     main/
       l/linus-desktop/
@@ -147,11 +150,13 @@ Users add the repo with:
 curl -fsSL https://kevinthelago.github.io/linus/apt/linus-release.gpg \
   | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/linus.gpg
 
-echo "deb https://kevinthelago.github.io/linus/apt linus main" \
+echo "deb https://kevinthelago.github.io/linus/apt trixie main" \
   | sudo tee /etc/apt/sources.list.d/linus.list
 
 sudo apt-get update
 ```
+
+The codename `trixie` matches `apt/conf/distributions` (`Codename: trixie`). Suite alias `stable` also works.
 
 ## Smoke test failures
 

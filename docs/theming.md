@@ -11,152 +11,148 @@ config schema; this document covers only the linus-specific overrides.
 
 | Path | Contents |
 |---|---|
-| `/etc/skel/.config/mantle/` | Defaults copied into every new user's home on first login |
+| `/etc/skel/.config/mantle/` | Defaults copied into every new user's home on first login via `pam_mkhomedir` |
 | `/etc/mantle/` | System-wide fallback used when `~/.config/mantle/` is absent (e.g. for the root user, or when skel copy failed) |
 
-The files under `/etc/skel/.config/mantle/` are shipped by the `linus-branding` package.
-They are copied to `~/.config/mantle/` by the session initialisation script on first login.
-After that copy, the user owns their config — system upgrades do not overwrite it.
+The skel files are shipped by the `linus-session` package. After the first-login copy, the
+user owns their config — system upgrades do not overwrite it.
 
-Typical skel layout:
+Skel layout:
 
 ```
 /etc/skel/.config/mantle/
-  config.toml          # top-level mantle config (bar layout, launcher, notifications)
-  theme/
-    tokens.css         # design token overrides (colors, radii, spacing, typography)
-    overrides.css      # additional component-level CSS (optional, empty by default)
+  config.toml          # bar layout, widgets, launcher, session commands
+  theme.toml           # color palette and typography (Catppuccin Mocha)
 ```
 
-## Design tokens
+## The `config.toml` file
 
-mantle resolves design tokens from CSS custom properties. linus's `tokens.css` declares
-overrides in the `:root` scope; mantle's built-in defaults apply for any token not listed here.
+`config.toml` controls mantle's structural layout. The linus defaults:
 
-```css
-/* /etc/skel/.config/mantle/theme/tokens.css  — linus decorator defaults */
-:root {
-  /* Surface */
-  --mn-color-surface:          #1e1e2e;
-  --mn-color-surface-overlay:  rgba(30, 30, 46, 0.85);
-  --mn-color-border:           rgba(255, 255, 255, 0.08);
+```toml
+# /etc/skel/.config/mantle/config.toml — linus defaults
 
-  /* Text */
-  --mn-color-text-primary:     #cdd6f4;
-  --mn-color-text-secondary:   #a6adc8;
-  --mn-color-text-disabled:    #585b70;
+[compositor]
+# "sway" or "hyprland" — detected automatically at runtime if unset.
+# backend = "sway"
 
-  /* Accent */
-  --mn-color-accent:           #cba6f7;   /* mauve */
-  --mn-color-accent-hover:     #d9b8ff;
+[bar]
+enabled  = true
+position = "top"
+height   = 40
 
-  /* Status */
-  --mn-color-success:          #a6e3a1;
-  --mn-color-warning:          #f9e2af;
-  --mn-color-error:            #f38ba8;
+[widgets]
+workspaces    = true
+clock         = true
+battery       = true
+network       = true
+audio         = true
+notifications = true
+tray          = true
 
-  /* Geometry */
-  --mn-radius-bar:             8px;
-  --mn-radius-widget:          12px;
-  --mn-radius-launcher:        16px;
+[launcher]
+enabled = true
 
-  /* Typography */
-  --mn-font-family:            "Noto Sans", sans-serif;
-  --mn-font-size-base:         13px;
-  --mn-font-size-label:        11px;
+[notifications]
+enabled    = true
+timeout_ms = 5000   # 0 = persistent until dismissed
 
-  /* Spacing */
-  --mn-bar-height:             36px;
-  --mn-bar-padding:            0 12px;
-  --mn-widget-gap:             8px;
-
-  /* Backdrop blur (compositor must support wlr-layer-shell blur ext) */
-  --mn-backdrop-blur:          12px;
-}
+[session]
+lock_cmd   = "swaylock"
+logout_cmd = "swaymsg exit"
+# suspend/hibernate handed off to systemd-logind
 ```
 
-Tokens are scoped under the `--mn-` namespace. Variables outside this namespace are not part
-of the mantle public API and may change between mantle releases.
+See the mantle documentation for the full schema.
+
+## The `theme.toml` file
+
+`theme.toml` defines the color palette and typography. linus ships **Catppuccin Mocha** as the
+default dark palette with mauve as the accent color:
+
+```toml
+# /etc/skel/.config/mantle/theme.toml — linus defaults (Catppuccin Mocha)
+
+[palette]
+mauve     = "#cba6f7"
+blue      = "#89b4fa"
+text      = "#cdd6f4"
+base      = "#1e1e2e"
+surface0  = "#313244"
+# ... full palette in session/skel/.config/mantle/theme.toml
+
+[colors]
+background = "base"
+surface    = "surface0"
+accent     = "blue"
+text       = "text"
+error      = "red"
+warning    = "yellow"
+success    = "green"
+
+[bar]
+background_opacity = 0.92
+
+[font]
+family      = "Inter, Noto Sans, sans-serif"
+size        = 14
+mono_family = "Noto Sans Mono, monospace"
+```
+
+Override any key in `~/.config/mantle/theme.toml` to personalise without forking the file.
+
+## The `tokens.css` file (webview layer)
+
+In addition to `theme.toml`, the `branding/` assets include `tokens.css` — CSS custom
+properties used by mantle's Tauri webview UI. These are installed alongside the branding
+assets:
+
+```
+/etc/skel/.config/mantle/theme/tokens.css    (per-user skel)
+/etc/mantle/theme/tokens.css                 (system fallback)
+```
+
+Tokens are scoped under `--mn-`. They are the more granular CSS-layer counterpart to
+`theme.toml`; both files are loaded by mantle. See the mantle documentation for the full
+`--mn-` token reference.
 
 ## Overriding the theme
 
 ### Per-user
 
-Edit `~/.config/mantle/theme/tokens.css`. mantle's config watcher reloads the theme on file
-change — no restart required.
+Edit `~/.config/mantle/theme.toml`. mantle's config watcher reloads on file change — no
+restart required.
 
-To reset to the linus defaults, remove or replace the file with the skel copy:
+To reset to the linus defaults:
 
 ```bash
-cp /etc/skel/.config/mantle/theme/tokens.css ~/.config/mantle/theme/tokens.css
+cp /etc/skel/.config/mantle/theme.toml ~/.config/mantle/theme.toml
+```
+
+For CSS-level overrides (hiding a widget, adjusting a specific component):
+
+```bash
+# Create overrides.css targeting mantle component selectors
+~/.config/mantle/theme/overrides.css
 ```
 
 ### System-wide (all users)
 
-Edit `/etc/mantle/theme/tokens.css`. This file is the fallback; it does **not** override
-per-user config. To push a system default to existing users, copy the file and inform users
-to merge it (or provide a migration script in a package postinst).
-
-### Component-level CSS
-
-`overrides.css` is imported after `tokens.css` and accepts arbitrary CSS targeting mantle's
-component selectors. Use it for adjustments that tokens cannot express (e.g. hiding a specific
-widget, adjusting a single component's layout).
-
-mantle component selectors are documented in the mantle repo's UI design-system docs. They are
-considered semi-stable — minor version bumps may rename selectors; check the mantle changelog
-when bumping `mantle.pin`.
-
-## The `config.toml` file
-
-`config.toml` controls mantle's structural layout — which widgets appear on the bar, the
-launcher hotkey, notification timeout, and so on. The linus decorator ships an opinionated
-default:
-
-```toml
-# /etc/skel/.config/mantle/config.toml  — linus decorator defaults
-
-[bar]
-position = "top"
-height   = 36
-modules_left  = ["workspaces", "launcher"]
-modules_right = ["tray", "audio", "network", "battery", "clock"]
-
-[launcher]
-hotkey = "Super+Space"
-
-[notifications]
-timeout = 5000   # ms
-
-[theme]
-tokens   = "theme/tokens.css"
-overrides = "theme/overrides.css"
-```
-
-See the mantle documentation for the full schema.
+Edit `/etc/mantle/theme.toml`. This is the fallback and does **not** override per-user config.
+To push a system default to existing users, copy the file and provide a migration note in the
+package changelog.
 
 ## Packaging the decorator
 
-The decorator defaults are packaged in `linus-branding`:
+The decorator files live in two places:
 
-```
-packages/linus-branding/
-  debian/
-    control          # Package: linus-branding
-    install          # copies skel and /etc/mantle/ files
-  skel/
-    .config/mantle/
-      config.toml
-      theme/
-        tokens.css
-        overrides.css
-  system/
-    etc/mantle/      # system fallback (same files)
-```
+| Directory | Contents | Packaged by |
+|---|---|---|
+| `session/skel/.config/mantle/` | `config.toml`, `theme.toml` — copied to every new user's home | `linus-session` |
+| `branding/mantle/` | `config.toml`, `theme/tokens.css`, `theme/overrides.css` — CSS token layer | `linus-branding` |
 
-When building a custom linus spin (a respin or downstream), replace the files in
-`packages/linus-branding/skel/` and rebuild `linus-branding` — no other package needs to
-change.
+When building a custom linus spin, replace the files in `session/skel/` and `branding/mantle/`
+and rebuild both packages — no other package needs to change.
 
 ## Cross-references
 
