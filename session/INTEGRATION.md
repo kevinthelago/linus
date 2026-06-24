@@ -1,51 +1,43 @@
-# mantle Integration Contract — session stream assumptions
+# mantle Integration Contract — session stream notes
 
-This document records the assumptions the `linus-session` package makes about
-the mantle binary, config, and CLI. These must be reconciled against
-`contracts/mantle-integration.md` (owned by the director/mantle-pkg stream)
-once that file lands. Every item tagged **[CONFIRM]** requires verification
-against mantle's `src-tauri/` source.
+This document records how the `linus-session` package implements the integration
+seam defined in `contracts/mantle-integration.md`. Items marked **[CONFIRM]**
+still need verification against mantle's `src-tauri/` source; everything else
+has been reconciled against the contract.
 
 ---
 
 ## Binary path
 
-| Assumption | Source |
+| Path | Source |
 |---|---|
-| `/usr/bin/mantle` | Standard Debian package prefix; Tauri 2 `.deb` bundles typically install to `/usr/bin/`. |
-
-**[CONFIRM]** Verify by inspecting the Tauri bundle's `debian/` directory in the mantle repo
-or running `dpkg -L mantle` on a built package.
+| `/usr/bin/mantle` | Confirmed in `contracts/mantle-integration.md` §2 package layout. |
 
 ---
 
 ## Launch command
 
-| Assumption | CLI |
+| CLI | Status |
 |---|---|
-| Session autostart | `mantle` (no flags required; reads config from standard paths) |
+| `mantle` (no flags) | Assumed; contract §3 shows `exec mantle` in sway config with no flags. **[CONFIRM]** against `src-tauri/src/main.rs` — update watchdog scripts if flags are required. |
 
 The watchdog scripts invoke `/usr/bin/mantle` with no arguments.
-
-**[CONFIRM]** Check `src-tauri/src/main.rs` or `Cargo.toml [[bin]]` for required flags.
-If `--bar`, `--config <path>`, or similar flags are needed, update
-`session/scripts/mantle-watchdog.sh` and `session/scripts/mantle-watchdog-hypr.sh`.
 
 ---
 
 ## Config path resolution
 
+Confirmed in `contracts/mantle-integration.md` §5:
+
 | Priority | Path |
 |---|---|
-| 1 (user) | `$XDG_CONFIG_HOME/mantle/config.toml` → `~/.config/mantle/config.toml` |
-| 2 (system) | `/etc/mantle/config.toml` |
+| 1 | `$MANTLE_CONFIG_DIR` (if set) |
+| 2 | `$XDG_CONFIG_HOME/mantle/` → `~/.config/mantle/` |
+| 3 | `/etc/mantle/` (system fallback) |
 
-`linus-session` seeds both locations:
-- `/etc/skel/.config/mantle/` — new users get this on first login
-- `/etc/mantle/` — system-wide fallback for existing users without a personal config
-
-**[CONFIRM]** Verify path priority against `config/loader.rs` in the mantle repo.
-Update `mk/session.mk` staging paths if the fallback location differs.
+`linus-session` seeds both writable locations:
+- `/etc/skel/.config/mantle/` — new users get this on first login via pam_mkhomedir
+- `/etc/mantle/` — permanent system-wide fallback for existing users
 
 ---
 
@@ -94,10 +86,12 @@ without showing a warning.
 
 ## Reconciliation checklist
 
-When `contracts/mantle-integration.md` lands, verify:
+Reconciled against `contracts/mantle-integration.md` (landed 2026-06-24):
 
-- [ ] Binary path matches
-- [ ] No required CLI flags missing from watchdog scripts
-- [ ] Config path priority matches mantle's `config/loader.rs`
-- [ ] All required env vars are exported in session wrappers
-- [ ] Tauri `.deb` Depends already list `sway` or we add it explicitly
+- [x] Binary path `/usr/bin/mantle` — confirmed §2
+- [x] Session entry Exec changed to `/usr/bin/linus-session` — confirmed §3
+- [x] Config path priority — confirmed §5
+- [x] Extra Depends added to `linus-session`: pipewire, wireplumber, network-manager, upower — confirmed §4
+- [x] DesktopNames changed from `linus;sway` to `linus` — confirmed §3
+- [ ] CLI flags for mantle binary — **[CONFIRM]** against `src-tauri/src/main.rs`
+- [ ] All required env vars present — **[CONFIRM]** if mantle needs DBUS_SESSION_BUS_ADDRESS

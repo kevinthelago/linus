@@ -19,6 +19,7 @@ session-stage: packaging/session/linus-session/DEBIAN/control
 	@rm -rf $(SESSION_STAGEDIR)
 	@mkdir -p \
 		$(SESSION_STAGEDIR)/DEBIAN \
+		$(SESSION_STAGEDIR)/usr/bin \
 		$(SESSION_STAGEDIR)/usr/lib/linus \
 		$(SESSION_STAGEDIR)/usr/share/wayland-sessions \
 		$(SESSION_STAGEDIR)/usr/share/xdg-desktop-portal/portals \
@@ -38,14 +39,18 @@ session-stage: packaging/session/linus-session/DEBIAN/control
 	cp session/linus-plain-sway.desktop   $(SESSION_STAGEDIR)/usr/share/wayland-sessions/
 	cp session/linus-hyprland.desktop     $(SESSION_STAGEDIR)/usr/share/wayland-sessions/
 
-	# Session scripts (/usr/lib/linus/)
-	cp session/scripts/linus-session.sh          $(SESSION_STAGEDIR)/usr/lib/linus/
-	cp session/scripts/linus-hyprland-session.sh $(SESSION_STAGEDIR)/usr/lib/linus/
+	# Public session commands to /usr/bin/ (names match the session entry Exec fields
+	# in the .desktop files and the contract: /usr/bin/linus-session)
+	cp session/scripts/linus-session.sh          $(SESSION_STAGEDIR)/usr/bin/linus-session
+	cp session/scripts/linus-hyprland-session.sh $(SESSION_STAGEDIR)/usr/bin/linus-hyprland-session
+	chmod 755 \
+		$(SESSION_STAGEDIR)/usr/bin/linus-session \
+		$(SESSION_STAGEDIR)/usr/bin/linus-hyprland-session
+
+	# Internal helpers stay in /usr/lib/linus/
 	cp session/scripts/mantle-watchdog.sh        $(SESSION_STAGEDIR)/usr/lib/linus/
 	cp session/scripts/mantle-watchdog-hypr.sh   $(SESSION_STAGEDIR)/usr/lib/linus/
 	chmod 755 \
-		$(SESSION_STAGEDIR)/usr/lib/linus/linus-session.sh \
-		$(SESSION_STAGEDIR)/usr/lib/linus/linus-hyprland-session.sh \
 		$(SESSION_STAGEDIR)/usr/lib/linus/mantle-watchdog.sh \
 		$(SESSION_STAGEDIR)/usr/lib/linus/mantle-watchdog-hypr.sh
 

@@ -2,7 +2,7 @@ Package: linus-session
 Version: 0.1.0
 Architecture: all
 Maintainer: linus project <linus@example.com>
-Depends: sway, mantle, dbus-user-session, xdg-desktop-portal, xdg-desktop-portal-wlr, xdg-desktop-portal-gtk
+Depends: sway, mantle, dbus-user-session, pipewire, wireplumber, network-manager, upower, xdg-desktop-portal, xdg-desktop-portal-wlr, xdg-desktop-portal-gtk
 Recommends: swaynag, foot, hyprland, xdg-desktop-portal-hyprland
 Section: x11
 Priority: optional

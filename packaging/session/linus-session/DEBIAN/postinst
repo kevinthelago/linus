@@ -1,9 +1,10 @@
 #!/bin/sh
 set -e
 
-# Make session/watchdog scripts executable
-chmod +x /usr/lib/linus/linus-session.sh
-chmod +x /usr/lib/linus/linus-hyprland-session.sh
+# Ensure public session commands are executable (dpkg-deb preserves mode,
+# but belt-and-suspenders on upgrades from older package versions)
+chmod +x /usr/bin/linus-session
+chmod +x /usr/bin/linus-hyprland-session
 chmod +x /usr/lib/linus/mantle-watchdog.sh
 chmod +x /usr/lib/linus/mantle-watchdog-hypr.sh
 

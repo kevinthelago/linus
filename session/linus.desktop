@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=linus (mantle)
 Comment=linus desktop environment with mantle shell
-Exec=/usr/lib/linus/linus-session.sh
+Exec=/usr/bin/linus-session
 Type=Application
-DesktopNames=linus;sway
+DesktopNames=linus
