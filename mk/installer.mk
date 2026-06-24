@@ -42,19 +42,20 @@ installer-install:
 	install -m 644 installer/linus-installer.desktop \
 		$(USR_APPS)/linus-installer.desktop
 
+INSTALLER_DEB_STAGE := /tmp/$(INSTALLER_PKG_NAME)-stage
+
 installer-deb: installer-check
-	@echo "==> Building $(INSTALLER_PKG_NAME)_$(INSTALLER_PKG_VERSION).deb..."
-	$(eval DEB_STAGE := $(shell mktemp -d))
-	$(MAKE) installer-install DESTDIR=$(DEB_STAGE)
-	install -d $(DEB_STAGE)/DEBIAN
-	install -m 644 installer/debian/control $(DEB_STAGE)/DEBIAN/control
-	install -m 755 installer/debian/postinst $(DEB_STAGE)/DEBIAN/postinst
-	sed -i "s/^Version:.*/Version: $(INSTALLER_PKG_VERSION)/" \
-		$(DEB_STAGE)/DEBIAN/control
-	install -d $(DIST_PKG_DIR)
-	dpkg-deb --build --root-owner-group $(DEB_STAGE) \
+	@echo "==> Building $(INSTALLER_PKG_NAME)_$(INSTALLER_PKG_VERSION)_all.deb..."
+	rm -rf $(INSTALLER_DEB_STAGE)
+	mkdir -p $(INSTALLER_DEB_STAGE)
+	$(MAKE) installer-install DESTDIR=$(INSTALLER_DEB_STAGE)
+	install -d $(INSTALLER_DEB_STAGE)/DEBIAN
+	install -m 644 installer/debian/control $(INSTALLER_DEB_STAGE)/DEBIAN/control
+	install -m 755 installer/debian/postinst $(INSTALLER_DEB_STAGE)/DEBIAN/postinst
+	mkdir -p $(DIST_PKG_DIR)
+	dpkg-deb --build --root-owner-group $(INSTALLER_DEB_STAGE) \
 		$(DIST_PKG_DIR)/$(INSTALLER_PKG_NAME)_$(INSTALLER_PKG_VERSION)_all.deb
-	rm -rf $(DEB_STAGE)
+	rm -rf $(INSTALLER_DEB_STAGE)
 	@echo "==> $(DIST_PKG_DIR)/$(INSTALLER_PKG_NAME)_$(INSTALLER_PKG_VERSION)_all.deb"
 
 installer-check:
