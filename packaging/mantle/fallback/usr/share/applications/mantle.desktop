@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=mantle
+Comment=linus Wayland shell
+Exec=mantle
+Icon=mantle
+Categories=System;
+NoDisplay=true

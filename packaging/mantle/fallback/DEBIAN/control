@@ -1,0 +1,11 @@
+Package: mantle
+Version: @VERSION@
+Architecture: amd64
+Maintainer: linus project <linus@example.com>
+Section: x11
+Priority: optional
+Depends: libwebkit2gtk-4.1-0, libayatana-appindicator3-1, pipewire, wireplumber, network-manager, upower, xdg-desktop-portal, xdg-desktop-portal-wlr
+Description: mantle Wayland shell (fallback package)
+ A Tauri 2 / React-based Wayland compositor shell, assembled via the
+ dpkg-deb fallback path because the Tauri bundle was absent or unusable at
+ packaging time. Binary-only; icons and additional assets may be missing.
