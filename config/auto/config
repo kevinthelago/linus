@@ -2,21 +2,28 @@
 # config/auto/config — called automatically by `lb config`; do not invoke directly.
 #
 # Environment (exported by mk/iso.mk):
-#   SNAPSHOT_DATE    Pinned debian snapshot date (e.g. 20260601T000000Z)
+#   SNAPSHOT_DATE    Pinned debian snapshot date (overrides snapshot.pin)
 #   LINUS_REPO_URL   APT URL for the linus package repo (empty = skip)
 set -eu
 
+# Read snapshot date from snapshot.pin if not already set in environment.
+if [ -z "${SNAPSHOT_DATE:-}" ] && [ -f snapshot.pin ]; then
+    SNAPSHOT_DATE="$(cat snapshot.pin | tr -d '[:space:]')"
+fi
 : "${SNAPSHOT_DATE:=20260601T000000Z}"
+
 SNAPSHOT_DEB="http://snapshot.debian.org/archive/debian/${SNAPSHOT_DATE}/"
 SNAPSHOT_SEC="http://snapshot.debian.org/archive/debian-security/${SNAPSHOT_DATE}/"
 
 # Generate linus apt archive source and package list if a repo URL is provided.
+# The linus apt repo uses codename "trixie", component "main".
 mkdir -p config/archives config/package-lists
 if [ -n "${LINUS_REPO_URL:-}" ]; then
-    printf 'deb [trusted=yes] %s linus main\n' "${LINUS_REPO_URL}" \
+    printf 'deb [trusted=yes] %s trixie main\n' "${LINUS_REPO_URL}" \
         > config/archives/linus.list.chroot
     # Install the full linus desktop stack from the apt repo.
-    printf 'linus-desktop\n' > config/package-lists/linus-packages.list.chroot
+    printf 'linus-desktop\nlinus-branding\n' \
+        > config/package-lists/linus-packages.list.chroot
 else
     rm -f config/archives/linus.list.chroot
     rm -f config/package-lists/linus-packages.list.chroot

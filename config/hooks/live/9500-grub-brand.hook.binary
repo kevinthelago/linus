@@ -1,23 +1,53 @@
 #!/bin/sh
 # 9500-grub-brand.hook.binary
-# Replace generic Debian labels with "linus" in the generated GRUB and syslinux menus.
+#
+# Apply linus branding to the generated GRUB and syslinux boot menus.
+# Runs in the binary stage (against the assembled binary/ tree).
+# The chroot squashfs is available at chroot/ at this point.
 set -eu
 
-# GRUB 2 (UEFI path)
-for cfg in binary/boot/grub/grub.cfg binary/EFI/boot/grub.cfg; do
+GRUB_THEME_SRC="chroot/usr/share/grub/themes/linus"
+GRUB_THEME_DST="binary/boot/grub/themes/linus"
+GRUB_FRAG="chroot/usr/share/linus/grub/linus-grub.cfg"
+
+# -- Install the linus GRUB graphical theme --
+if [ -d "${GRUB_THEME_SRC}" ]; then
+    mkdir -p "${GRUB_THEME_DST}"
+    cp -r "${GRUB_THEME_SRC}/." "${GRUB_THEME_DST}/"
+    echo "[brand] linus GRUB theme installed"
+fi
+
+# -- Patch GRUB 2 configs --
+for cfg in binary/boot/grub/grub.cfg \
+           binary/EFI/boot/grub.cfg \
+           binary/boot/grub/grub-efi.cfg; do
     [ -f "$cfg" ] || continue
+
+    # Prepend the linus branding fragment (menu title, timeout, colours) if
+    # the fragment is available and not already applied.
+    if [ -f "${GRUB_FRAG}" ] && ! grep -q 'linus-grub.cfg\|set menu_title' "${cfg}"; then
+        { cat "${GRUB_FRAG}"; printf '\n'; cat "${cfg}"; } > "${cfg}.tmp"
+        mv "${cfg}.tmp" "${cfg}"
+    fi
+
+    # Point GRUB at the graphical theme when the theme was installed above.
+    if [ -d "${GRUB_THEME_DST}" ] && ! grep -q 'set theme=' "${cfg}"; then
+        sed -i '1i set theme=/boot/grub/themes/linus/theme.txt' "${cfg}"
+    fi
+
+    # Replace any remaining Debian labels.
     sed -i \
         -e 's/Debian GNU\/Linux/linus/g' \
-        -e 's/debian/linus/g' \
-        "$cfg"
+        -e 's/"Debian"/"linus"/g' \
+        "${cfg}"
 done
 
-# syslinux / isolinux (BIOS path)
+# -- Patch syslinux / isolinux menus (BIOS) --
 for cfg in binary/isolinux/live.cfg binary/isolinux/isolinux.cfg \
            binary/syslinux/live.cfg binary/syslinux/syslinux.cfg; do
     [ -f "$cfg" ] || continue
     sed -i \
         -e 's/Debian GNU\/Linux/linus/g' \
         -e 's/Debian/linus/g' \
-        "$cfg"
+        "${cfg}"
 done

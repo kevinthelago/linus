@@ -8,11 +8,18 @@
 #   iso-size    Report ISO size vs the size budget
 #
 # Environment variables:
-#   SNAPSHOT_DATE    Pinned Debian snapshot date (default: 20260601T000000Z)
+#   SNAPSHOT_DATE    Pinned Debian snapshot date (reads snapshot.pin if unset)
 #   LINUS_REPO_URL   APT URL for the linus repo (optional; local dist/repo used if present)
 #   ISO_LB_EXTRA     Extra args forwarded verbatim to lb config noauto
 
-SNAPSHOT_DATE      ?= 20260601T000000Z
+# Read snapshot date from snapshot.pin if not overridden in the environment.
+ifeq ($(origin SNAPSHOT_DATE),undefined)
+  SNAPSHOT_DATE := $(shell cat snapshot.pin 2>/dev/null | tr -d '[:space:]')
+  ifeq ($(SNAPSHOT_DATE),)
+    SNAPSHOT_DATE := 20260601T000000Z
+  endif
+endif
+
 DIST_DIR           := dist
 
 # ISO size budget in MiB — tracked and surfaced as a warning; adjust as the image grows.

@@ -62,13 +62,12 @@ wl-clipboard
 grim
 slurp
 
+# --- Boot splash ---
+# linus-branding provides the linus Plymouth theme over these base packages.
+plymouth
+plymouth-themes
+
 # --- Live system utilities ---
 curl
 wget
 git
-
-# --- linus packages (from linus apt repo via LINUS_REPO_URL) ---
-# Uncommented automatically when the apt repo is configured.
-# linus-session
-# linus-greeter
-# linus-desktop
