@@ -1,28 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
   <defs>
     <radialGradient id="bg" cx="35%" cy="60%" r="80%">
-      <stop offset="0%" stop-color="#1a1a2e"/>
-      <stop offset="100%" stop-color="#0a0a0f"/>
+      <stop offset="0%" stop-color="#1e1e2e"/>
+      <stop offset="100%" stop-color="#11111b"/>
     </radialGradient>
     <radialGradient id="glow1" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#7c6aff" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#7c6aff" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#cba6f7" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#cba6f7" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#4fa8d9" stop-opacity="0.12"/>
-      <stop offset="100%" stop-color="#4fa8d9" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#89b4fa" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#89b4fa" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <!-- base background -->
   <rect width="1920" height="1080" fill="url(#bg)"/>
 
-  <!-- soft ambient glows -->
+  <!-- ambient glows -->
   <ellipse cx="480" cy="640" rx="520" ry="420" fill="url(#glow1)"/>
   <ellipse cx="1440" cy="320" rx="480" ry="380" fill="url(#glow2)"/>
 
-  <!-- subtle geometric grid lines (low opacity) -->
-  <g stroke="#e2e8f0" stroke-opacity="0.03" stroke-width="1">
+  <!-- subtle grid -->
+  <g stroke="#cdd6f4" stroke-opacity="0.025" stroke-width="1">
     <line x1="0" y1="216" x2="1920" y2="216"/>
     <line x1="0" y1="432" x2="1920" y2="432"/>
     <line x1="0" y1="648" x2="1920" y2="648"/>
@@ -33,7 +32,7 @@
     <line x1="1536" y1="0" x2="1536" y2="1080"/>
   </g>
 
-  <!-- wordmark — bottom left, understated -->
+  <!-- wordmark -->
   <text x="80" y="1024" font-family="monospace, sans-serif" font-size="28"
-        font-weight="300" letter-spacing="12" fill="#e2e8f0" fill-opacity="0.25">linus</text>
+        font-weight="300" letter-spacing="12" fill="#cdd6f4" fill-opacity="0.20">linus</text>
 </svg>

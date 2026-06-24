@@ -1,107 +1,95 @@
-/* linus gtkgreet theme
- * Applied via: gtkgreet -s /usr/share/linus/gtkgreet/style.css
+/* linus branding gtkgreet override
+ * Installed to /usr/share/linus/branding-greetd.css
+ * Referenced by /etc/greetd/config.toml via: gtkgreet -s ...
+ *
+ * Palette: Catppuccin Mocha (matches mantle tokens.css).
+ * Wallpaper at /usr/share/backgrounds/linus/default.svg.
  */
 
-/* ── colour tokens ── */
-@define-color bg-base    #0f1117;
-@define-color bg-surface #1a1b26;
-@define-color bg-muted   #24263a;
-@define-color fg-default #e2e8f0;
-@define-color fg-subtle  #8892a4;
-@define-color accent     #7c6aff;
-@define-color accent-dim #5a4cd6;
-@define-color error      #f87171;
-@define-color border     rgba(226, 232, 240, 0.08);
-
-/* ── root window ── */
-window {
-  background-color: @bg-base;
-  color: @fg-default;
-}
-
-/* ── login card ── */
-box#body {
-  background-color: @bg-surface;
-  border: 1px solid @border;
-  border-radius: 12px;
-  padding: 40px 48px;
-  min-width: 360px;
-}
-
-/* ── wordmark / header ── */
-label#body-header {
-  color: @fg-default;
-  font-size: 22px;
-  font-weight: 300;
-  letter-spacing: 6px;
-  margin-bottom: 32px;
-}
-
-/* ── form fields ── */
-entry {
-  background-color: @bg-muted;
-  border: 1px solid @border;
-  border-radius: 6px;
-  color: @fg-default;
-  padding: 10px 14px;
+* {
+  color: #cdd6f4;
+  font-family: "Inter", "Noto Sans", sans-serif;
   font-size: 14px;
-  caret-color: @accent;
+}
+
+window {
+  background-image: url("/usr/share/backgrounds/linus/default.svg");
+  background-size: cover;
+  background-position: center;
+}
+
+window.fallback {
+  background-color: #1e1e2e;
+}
+
+/* Login card */
+box#body {
+  background-color: rgba(24, 24, 37, 0.90);
+  border: 1px solid rgba(180, 190, 254, 0.15);
+  border-radius: 12px;
+  padding: 36px 40px;
+  min-width: 340px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Inputs */
+entry {
+  background-color: #313244;
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  color: #cdd6f4;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  caret-color: #89b4fa;
 }
 
 entry:focus {
-  border-color: @accent;
-  outline: none;
+  border-color: #89b4fa;
+  box-shadow: 0 0 0 2px rgba(137, 180, 250, 0.2);
 }
 
-entry placeholder {
-  color: @fg-subtle;
+/* Session selector */
+combobox,
+combobox button {
+  background-color: #313244;
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  color: #cdd6f4;
+  padding: 6px 12px;
+  margin-bottom: 14px;
 }
 
-/* ── submit button ── */
-button {
-  background-color: @accent;
+combobox button:hover,
+combobox button:focus {
+  border-color: #89b4fa;
+  background-color: #45475a;
+}
+
+/* Login button */
+button.suggested-action {
+  background-color: #cba6f7;
+  color: #1e1e2e;
   border: none;
   border-radius: 6px;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 10px 24px;
-  margin-top: 16px;
+  padding: 8px 20px;
+  font-weight: 600;
   transition: background-color 120ms ease;
 }
 
-button:hover {
-  background-color: @accent-dim;
+button.suggested-action:hover {
+  background-color: #d9b8ff;
 }
 
-button:active {
-  background-color: @accent-dim;
+button.suggested-action:active {
+  background-color: #b4befe;
 }
 
-/* ── session selector ── */
-combobox,
-combobox > button {
-  background-color: @bg-muted;
-  border: 1px solid @border;
-  border-radius: 6px;
-  color: @fg-default;
-  padding: 8px 12px;
-}
-
-combobox > button:hover {
-  border-color: @accent;
-}
-
-/* ── error messages ── */
+/* Status messages */
 label.error {
-  color: @error;
-  font-size: 12px;
-  margin-top: 8px;
+  color: #f38ba8;
 }
 
-/* ── clock / date label (if enabled) ── */
-label#time {
-  color: @fg-subtle;
-  font-size: 13px;
-  font-weight: 300;
+label.info {
+  color: #a6adc8;
+  font-size: 12px;
 }

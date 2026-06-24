@@ -3,12 +3,14 @@
  * Uses the script module (vector-capable) with a text fallback path.
  */
 
-/* ── palette ── */
-BG_R = 0.059; BG_G = 0.067; BG_B = 0.091;   /* #0f1117 */
-FG_R = 0.886; FG_G = 0.910; FG_B = 0.941;   /* #e2e8f0 */
-AC_R = 0.486; AC_G = 0.416; AC_B = 1.000;   /* #7c6aff */
+/* ── palette — Catppuccin Mocha ── */
+BG_R = 0.118; BG_G = 0.118; BG_B = 0.180;   /* #1e1e2e base */
+FG_R = 0.804; FG_G = 0.839; FG_B = 0.957;   /* #cdd6f4 text */
+AC_R = 0.796; AC_G = 0.651; AC_B = 0.969;   /* #cba6f7 mauve */
 
-Window.SetBackgroundTopColor(BG_R, BG_G, BG_B);
+/* Catppuccin crust (#11111b) → base (#1e1e2e) gradient */
+BG2_R = 0.067; BG2_G = 0.067; BG2_B = 0.106;  /* #11111b crust */
+Window.SetBackgroundTopColor(BG2_R, BG2_G, BG2_B);
 Window.SetBackgroundBottomColor(BG_R, BG_G, BG_B);
 
 screen_width  = Window.GetWidth();

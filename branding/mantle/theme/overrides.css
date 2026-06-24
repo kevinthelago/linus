@@ -1,0 +1,47 @@
+/* linus decorator — component-level CSS overrides
+ * Installed to /etc/skel/.config/mantle/theme/overrides.css
+ * Imported after tokens.css; targets mantle component selectors.
+ * Selectors here are semi-stable — check the mantle changelog on pin bumps.
+ *
+ * Default linus decorator ships minimal overrides; most theming is via tokens.
+ */
+
+/* Bar root — enforce glass panel effect */
+.mn-bar {
+  background: var(--mn-color-surface-overlay);
+  backdrop-filter: var(--mn-blur);
+  -webkit-backdrop-filter: var(--mn-blur);
+  border-bottom: 1px solid var(--mn-color-border);
+  box-shadow: var(--mn-shadow-panel);
+}
+
+/* Widget chips on the bar */
+.mn-bar-widget {
+  border-radius: var(--mn-radius-sm);
+  padding: 2px var(--mn-space-2);
+  transition: background var(--mn-transition-fast);
+}
+
+.mn-bar-widget:hover {
+  background: var(--mn-color-surface0);
+}
+
+/* Accent glow on focused / active items */
+.mn-bar-widget.active {
+  color: var(--mn-color-accent);
+}
+
+/* Launcher button — show linus logo icon */
+.mn-launcher-button {
+  padding: 0 var(--mn-space-2);
+}
+
+/* Popup panels */
+.mn-popup {
+  background: var(--mn-color-mantle);
+  border: 1px solid var(--mn-color-border);
+  border-radius: var(--mn-radius-popup);
+  box-shadow: var(--mn-shadow-popup);
+  backdrop-filter: var(--mn-blur);
+  -webkit-backdrop-filter: var(--mn-blur);
+}

@@ -1,0 +1,78 @@
+/* linus decorator — default design tokens (Catppuccin Mocha palette)
+ * Installed to /etc/skel/.config/mantle/theme/tokens.css
+ * (system fallback: /etc/mantle/theme/tokens.css)
+ *
+ * Token namespace: --mn-<category>-<name>  (mantle design-system contract)
+ */
+
+:root {
+  /* ── surface ── */
+  --mn-color-base:              #1e1e2e;   /* Mocha base */
+  --mn-color-mantle:            #181825;   /* Mocha mantle */
+  --mn-color-crust:             #11111b;   /* Mocha crust */
+  --mn-color-surface:           #1e1e2e;
+  --mn-color-surface-overlay:   rgba(30, 30, 46, 0.88);
+  --mn-color-surface0:          #313244;
+  --mn-color-surface1:          #45475a;
+  --mn-color-surface2:          #585b70;
+  --mn-color-border:            rgba(255, 255, 255, 0.08);
+  --mn-color-border-focus:      rgba(137, 180, 250, 0.55);
+
+  /* ── text ── */
+  --mn-color-text-primary:      #cdd6f4;   /* Mocha text */
+  --mn-color-text-secondary:    #a6adc8;   /* Mocha subtext0 */
+  --mn-color-text-disabled:     #585b70;   /* Mocha surface2 */
+
+  /* ── accent (blue default; decorator override: mauve) ── */
+  --mn-color-accent:            #cba6f7;   /* Mocha mauve */
+  --mn-color-accent-hover:      #d9b8ff;
+  --mn-color-accent-dim:        rgba(203, 166, 247, 0.20);
+
+  /* ── status ── */
+  --mn-color-success:           #a6e3a1;   /* Mocha green */
+  --mn-color-warning:           #f9e2af;   /* Mocha yellow */
+  --mn-color-error:             #f38ba8;   /* Mocha red */
+  --mn-color-info:              #89b4fa;   /* Mocha blue */
+
+  /* ── bar / panel geometry ── */
+  --mn-radius-bar:              8px;
+  --mn-radius-widget:           12px;
+  --mn-radius-popup:            14px;
+  --mn-radius-sm:               4px;
+  --mn-radius-pill:             9999px;
+
+  /* ── bar dimensions ── */
+  --mn-bar-height:              36px;
+  --mn-bar-padding-h:           10px;
+  --mn-bar-gap:                 6px;
+
+  /* ── spacing (4-pt grid) ── */
+  --mn-space-1:                 4px;
+  --mn-space-2:                 8px;
+  --mn-space-3:                 12px;
+  --mn-space-4:                 16px;
+  --mn-space-6:                 24px;
+  --mn-space-8:                 32px;
+
+  /* ── typography ── */
+  --mn-font-sans:               "Inter", "Noto Sans", system-ui, sans-serif;
+  --mn-font-mono:               "JetBrains Mono", "Noto Sans Mono", monospace;
+  --mn-font-size-xs:            11px;
+  --mn-font-size-sm:            12px;
+  --mn-font-size-md:            14px;
+  --mn-font-size-lg:            16px;
+
+  /* ── glass / blur ── */
+  --mn-blur:                    blur(20px) saturate(1.4);
+  --mn-shadow-panel:            0 4px 24px rgba(0, 0, 0, 0.50);
+  --mn-shadow-popup:            0 8px 32px rgba(0, 0, 0, 0.65);
+
+  /* ── workspace dots ── */
+  --mn-workspace-dot-active:    var(--mn-color-accent);
+  --mn-workspace-dot-idle:      var(--mn-color-surface2);
+  --mn-workspace-dot-urgent:    var(--mn-color-error);
+
+  /* ── transitions ── */
+  --mn-transition-fast:         100ms ease;
+  --mn-transition-base:         180ms ease;
+}

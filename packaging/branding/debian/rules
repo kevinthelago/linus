@@ -13,17 +13,19 @@ override_dh_auto_install:
 		debian/linus-branding/usr/lib/os-release
 
 	# Plymouth theme
-	install -d debian/linus-branding/usr/share/plymouth/themes/linus
 	install -Dm644 branding/plymouth/linus/linus.plymouth \
 		debian/linus-branding/usr/share/plymouth/themes/linus/linus.plymouth
 	install -Dm644 branding/plymouth/linus/linus.script \
 		debian/linus-branding/usr/share/plymouth/themes/linus/linus.script
 
-	# Wallpaper
-	install -Dm644 branding/wallpaper/linus-default.svg \
+	# Wallpaper — canonical .svg at the stable path gtkgreet CSS references
+	install -Dm644 branding/wallpaper/default.svg \
+		debian/linus-branding/usr/share/backgrounds/linus/default.svg
+	# Keep the named copy so other tools can discover it by name
+	install -Dm644 branding/wallpaper/default.svg \
 		debian/linus-branding/usr/share/backgrounds/linus/linus-default.svg
 
-	# Icons / logo
+	# Icons / logo (hicolor)
 	install -Dm644 branding/icons/linus-logo.svg \
 		debian/linus-branding/usr/share/icons/hicolor/scalable/apps/linus-logo.svg
 	install -Dm644 branding/icons/linus-logo-16.svg \
@@ -31,21 +33,27 @@ override_dh_auto_install:
 	install -Dm644 branding/icons/linus-logo-32.svg \
 		debian/linus-branding/usr/share/icons/hicolor/32x32/apps/linus-logo.svg
 
-	# gtkgreet stylesheet
+	# gtkgreet branding override
 	install -Dm644 branding/gtkgreet/style.css \
-		debian/linus-branding/usr/share/linus/gtkgreet/style.css
+		debian/linus-branding/usr/share/linus/branding-greetd.css
 
-	# Mantle default theme + config
-	install -Dm644 branding/mantle/theme.css \
-		debian/linus-branding/etc/mantle/theme.css
-	install -Dm644 branding/mantle/theme.css \
-		debian/linus-branding/etc/skel/.config/mantle/theme.css
-	install -Dm644 branding/mantle/config.toml \
-		debian/linus-branding/etc/mantle/config.toml
+	# Mantle default theme — skel (per-user copy on first login)
 	install -Dm644 branding/mantle/config.toml \
 		debian/linus-branding/etc/skel/.config/mantle/config.toml
+	install -Dm644 branding/mantle/theme/tokens.css \
+		debian/linus-branding/etc/skel/.config/mantle/theme/tokens.css
+	install -Dm644 branding/mantle/theme/overrides.css \
+		debian/linus-branding/etc/skel/.config/mantle/theme/overrides.css
 
-	# GRUB branding fragment
+	# Mantle default theme — system fallback
+	install -Dm644 branding/mantle/config.toml \
+		debian/linus-branding/etc/mantle/config.toml
+	install -Dm644 branding/mantle/theme/tokens.css \
+		debian/linus-branding/etc/mantle/theme/tokens.css
+	install -Dm644 branding/mantle/theme/overrides.css \
+		debian/linus-branding/etc/mantle/theme/overrides.css
+
+	# GRUB branding fragment + graphical theme
 	install -Dm644 branding/grub/linus-grub.cfg \
 		debian/linus-branding/usr/share/linus/grub/linus-grub.cfg
 	install -Dm644 branding/grub/theme/theme.txt \
@@ -55,4 +63,4 @@ override_dh_installchangelogs:
 	dh_installchangelogs
 
 override_dh_compress:
-	dh_compress -X.svg -X.css -X.toml -X.cfg
+	dh_compress -X.svg -X.css -X.toml -X.cfg -X.txt
