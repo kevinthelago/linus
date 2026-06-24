@@ -17,6 +17,9 @@ MANTLE_PKG_DIR   := packaging/mantle
 
 .PHONY: mantle-deb mantle-fallback-deb mantle-clean
 
+# Hook into the apt.mk aggregate so `make packages` includes the mantle .deb.
+packages: mantle-deb
+
 ## mantle-deb: clone mantle at mantle.pin, build via npm/Tauri, restamp, run lintian
 mantle-deb:
 	@set -e; \
@@ -71,6 +74,20 @@ mantle-deb:
 		       >> $(MANTLE_STAGE_DIR)/DEBIAN/control; \
 	fi; \
 	\
+	if ! find $(MANTLE_STAGE_DIR)/usr/share/icons -name 'mantle*' 2>/dev/null | grep -q .; then \
+		echo "==> Injecting icons (Tauri bundle.icon was empty)"; \
+		mkdir -p \
+			$(MANTLE_STAGE_DIR)/usr/share/icons/hicolor/32x32/apps \
+			$(MANTLE_STAGE_DIR)/usr/share/icons/hicolor/128x128/apps \
+			$(MANTLE_STAGE_DIR)/usr/share/icons/hicolor/256x256/apps; \
+		cp $(MANTLE_BUILD_DIR)/src-tauri/icons/icon_32x32.png \
+		   $(MANTLE_STAGE_DIR)/usr/share/icons/hicolor/32x32/apps/mantle.png; \
+		cp $(MANTLE_BUILD_DIR)/src-tauri/icons/icon_128x128.png \
+		   $(MANTLE_STAGE_DIR)/usr/share/icons/hicolor/128x128/apps/mantle.png; \
+		cp $(MANTLE_BUILD_DIR)/src-tauri/icons/icon_256x256.png \
+		   $(MANTLE_STAGE_DIR)/usr/share/icons/hicolor/256x256/apps/mantle.png; \
+	fi; \
+	\
 	(cd $(MANTLE_STAGE_DIR) && \
 		find . -path './DEBIAN' -prune -o -type f -print \
 		       | sed 's|^\./||' \
@@ -120,6 +137,15 @@ mantle-fallback-deb:
 	install -m 755 "$$BIN" "$$STAGE/usr/bin/mantle"; \
 	cp $(MANTLE_PKG_DIR)/fallback/usr/share/applications/mantle.desktop \
 	   "$$STAGE/usr/share/applications/mantle.desktop"; \
+	\
+	ICONS_SRC=$(MANTLE_BUILD_DIR)/src-tauri/icons; \
+	mkdir -p \
+		"$$STAGE/usr/share/icons/hicolor/32x32/apps" \
+		"$$STAGE/usr/share/icons/hicolor/128x128/apps" \
+		"$$STAGE/usr/share/icons/hicolor/256x256/apps"; \
+	cp "$$ICONS_SRC/icon_32x32.png"    "$$STAGE/usr/share/icons/hicolor/32x32/apps/mantle.png"; \
+	cp "$$ICONS_SRC/icon_128x128.png"  "$$STAGE/usr/share/icons/hicolor/128x128/apps/mantle.png"; \
+	cp "$$ICONS_SRC/icon_256x256.png"  "$$STAGE/usr/share/icons/hicolor/256x256/apps/mantle.png"; \
 	\
 	sed "s/@VERSION@/$$LINUS_VER/" $(MANTLE_PKG_DIR)/fallback/DEBIAN/control \
 	    > "$$STAGE/DEBIAN/control"; \
