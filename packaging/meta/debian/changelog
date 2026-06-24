@@ -1,0 +1,10 @@
+linus-desktop (1.0.0-1) trixie; urgency=low
+
+  * Initial packaging for linus 1.0 distribution.
+  * Depends: mantle, linus-session, sway, greetd, gtkgreet, cage,
+    pipewire, wireplumber, network-manager, upower, xdg-desktop-portal,
+    xdg-desktop-portal-wlr, polkit-gnome, foot, fonts-noto.
+  * Recommends: linus-branding, hyprland, firefox-esr, thunar, gvfs,
+    network-manager-gnome, xdg-desktop-portal-gtk, pipewire-pulse.
+
+ -- Kevin Lago <kevinthelago@gmail.com>  Wed, 24 Jun 2026 00:00:00 +0000

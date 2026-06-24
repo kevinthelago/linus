@@ -1,0 +1,60 @@
+Source: linus-desktop
+Section: metapackages
+Priority: optional
+Maintainer: Kevin Lago <kevinthelago@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/kevinthelago/linus
+Vcs-Git: https://github.com/kevinthelago/linus.git -b packaging
+Vcs-Browser: https://github.com/kevinthelago/linus
+Rules-Requires-Root: no
+
+Package: linus-desktop
+Architecture: all
+Depends: ${misc:Depends},
+ mantle,
+ linus-session,
+ sway,
+ swaybg,
+ swaylock,
+ swayidle,
+ greetd,
+ gtkgreet,
+ cage,
+ pipewire,
+ pipewire-audio,
+ wireplumber,
+ network-manager,
+ upower,
+ xdg-desktop-portal,
+ xdg-desktop-portal-wlr,
+ polkit-gnome,
+ foot,
+ fonts-noto,
+ fonts-noto-color-emoji
+Recommends: linus-branding,
+ hyprland,
+ xdg-desktop-portal-hyprland,
+ xdg-desktop-portal-gtk,
+ pipewire-pulse,
+ libspa-0.2-bluetooth,
+ network-manager-gnome,
+ brightnessctl,
+ firefox-esr,
+ thunar,
+ gvfs,
+ gvfs-backends,
+ xdg-utils,
+ fonts-noto-mono
+Description: linus desktop environment meta-package
+ This meta-package pulls in the complete linus desktop: the mantle Wayland
+ shell, the sway Wayland compositor (with Hyprland available as an
+ alternative session), the greetd display manager and gtkgreet greeter,
+ the PipeWire audio stack, NetworkManager, UPower, xdg-desktop-portal,
+ a curated set of fonts, and a minimal default application set (foot
+ terminal, Firefox ESR browser, Thunar file manager).
+ .
+ Installing this package on a Debian trixie system with the linus apt
+ repository configured produces a complete, working linus desktop.
+ Removing this meta-package leaves all installed components in place;
+ only the dependency anchor is removed — the desktop continues to function.

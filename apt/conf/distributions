@@ -1,0 +1,8 @@
+Origin: linus
+Label: linus
+Codename: trixie
+Suite: stable
+Architectures: amd64
+Components: main
+Description: linus distribution packages for Debian trixie
+SignWith: yes
