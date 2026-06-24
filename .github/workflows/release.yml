@@ -49,9 +49,9 @@ jobs:
             CHANNEL=testing
             IS_PROD=false
           fi
-          echo "version=$VERSION"   >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG"           >> "$GITHUB_OUTPUT"
-          echo "channel=$CHANNEL"   >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION"       >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG"               >> "$GITHUB_OUTPUT"
+          echo "channel=$CHANNEL"       >> "$GITHUB_OUTPUT"
           echo "is_production=$IS_PROD" >> "$GITHUB_OUTPUT"
 
       - name: Download validated artifacts
@@ -66,6 +66,9 @@ jobs:
         env:
           GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
         run: printf '%s' "$GPG_SIGNING_KEY" | gpg --batch --import
+
+      - name: Export GPG public key
+        run: gpg --export --armor > dist/key.gpg
 
       - name: Sign ISO
         env:
@@ -161,6 +164,8 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       CHANNEL: ${{ needs.sign.outputs.channel }}
       TAG: ${{ needs.sign.outputs.tag }}
+      REPO: ${{ github.repository }}
+      REPO_OWNER: ${{ github.repository_owner }}
 
     steps:
       - uses: actions/checkout@v4
@@ -185,9 +190,7 @@ jobs:
             git worktree add /tmp/pages gh-pages
           else
             git worktree add --orphan /tmp/pages gh-pages
-            echo "# Linus apt repository" > /tmp/pages/README.md
-            git -C /tmp/pages add README.md
-            git -C /tmp/pages commit -m "Initialize gh-pages"
+            git -C /tmp/pages commit --allow-empty -m "Initialize gh-pages"
           fi
 
       - name: Update apt channel
@@ -196,14 +199,54 @@ jobs:
           if [ -d dist/apt-repo ]; then
             rsync -a --delete dist/apt-repo/ "/tmp/pages/${CHANNEL}/"
           fi
+
+      - name: Update GPG public key
+        run: cp dist/key.gpg /tmp/pages/key.gpg
+
+      - name: Update landing page
+        run: |
+          PAGES_BASE="https://${REPO_OWNER}.github.io/$(basename "${REPO}")"
+          cat > /tmp/pages/README.md << MDEOF
+          # Linus
+
+          A Debian-based Wayland desktop with the [mantle](https://github.com/${REPO}) shell.
+
+          ## Download
+
+          [Latest ISO → GitHub Releases](https://github.com/${REPO}/releases/latest)
+
+          Verify the download:
+          \`\`\`bash
+          curl -fsSL ${PAGES_BASE}/key.gpg | gpg --import
+          gpg --verify linus.iso.asc linus.iso
+          sha256sum -c SHA256SUMS
+          \`\`\`
+
+          ## APT Repository
+
+          ### Stable (tracks \`main\`)
+          \`\`\`bash
+          curl -fsSL ${PAGES_BASE}/key.gpg | sudo tee /usr/share/keyrings/linus.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/linus.gpg] ${PAGES_BASE}/stable trixie main" \\
+            | sudo tee /etc/apt/sources.list.d/linus.list
+          sudo apt-get update
+          sudo apt-get install linus-desktop
+          \`\`\`
+
+          ### Testing (tracks \`develop\`)
+          \`\`\`bash
+          echo "deb [signed-by=/usr/share/keyrings/linus.gpg] ${PAGES_BASE}/testing trixie main" \\
+            | sudo tee /etc/apt/sources.list.d/linus-testing.list
+          \`\`\`
+          MDEOF
+
+      - name: Commit and push gh-pages
+        run: |
           git -C /tmp/pages add -A
           git -C /tmp/pages diff --cached --quiet || \
             git -C /tmp/pages commit -m "deploy: apt-repo (${CHANNEL}) ${TAG}"
-
-      - name: Push gh-pages
-        run: |
           git -C /tmp/pages remote set-url origin \
-            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+            "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
           git -C /tmp/pages push origin gh-pages
 
   # ── 3. Prune old production releases (keep-3) ──────────────────────────────

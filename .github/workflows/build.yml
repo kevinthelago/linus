@@ -34,6 +34,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -48,6 +49,14 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('tools/smoke-boot/Cargo.lock', 'tools/smoke-boot/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-cargo-
 
+      # live-build's bootstrap cache; keyed on the snapshot pin and base package list.
+      - name: Cache live-build bootstrap
+        uses: actions/cache@v4
+        with:
+          path: .build/bootstrap
+          key: ${{ runner.os }}-lb-bootstrap-${{ hashFiles('snapshot.pin', 'contracts/system-packages.md') }}
+          restore-keys: ${{ runner.os }}-lb-bootstrap-
+
       - name: Build smoke-boot harness
         run: cargo build --manifest-path tools/smoke-boot/Cargo.toml --release
 
@@ -57,8 +66,13 @@ jobs:
       - name: Build apt repository
         run: make apt-repo
 
+      # live-build requires root for debootstrap and chroot operations.
       - name: Build ISO
-        run: make iso
+        run: sudo make iso
+
+      # Return ownership of any root-owned output files to the runner user.
+      - name: Fix dist ownership
+        run: sudo chown -R "$(id -u):$(id -g)" dist/ || true
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
