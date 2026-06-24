@@ -45,8 +45,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            tools/smoke-boot/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('tools/smoke-boot/Cargo.lock', 'tools/smoke-boot/Cargo.toml') }}
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock', 'tools/smoke-boot/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-cargo-
 
       # live-build's bootstrap cache; keyed on the snapshot pin and base package list.
@@ -86,6 +86,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smoke-boot
-          path: tools/smoke-boot/target/release/smoke-boot
+          path: target/release/smoke-boot
           retention-days: 3
           if-no-files-found: error
