@@ -12,8 +12,8 @@ set -euo pipefail
 # --- Configuration -----------------------------------------------------------
 
 # Debian sid snapshot to pull source packages from when backports are absent.
-# Advance this together with the trixie snapshot pin in mk/apt.mk.
-SID_SNAPSHOT="http://snapshot.debian.org/archive/debian/20260601T000000Z"
+# Override via env (mk/apt.mk passes it from snapshot.pin automatically).
+SID_SNAPSHOT="${SID_SNAPSHOT:-http://snapshot.debian.org/archive/debian/20260601T000000Z}"
 
 OUTPUT_DIR="${LINUS_DIST_PACKAGES:-dist/packages}"
 
