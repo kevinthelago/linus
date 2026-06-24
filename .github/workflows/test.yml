@@ -1,0 +1,92 @@
+name: Test
+
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+    branches:
+      - 'feature/**'
+      - develop
+      - main
+  # Allow developers to trigger the test suite manually against a specific build run.
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Build workflow run ID to test'
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  gate:
+    name: Test gate (lintian + smoke-boot)
+    runs-on: ubuntu-latest
+    # For workflow_run: only proceed if the triggering build succeeded.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Resolve build run ID
+        id: run
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "id=${{ inputs.build_run_id }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          run-id: ${{ steps.run.outputs.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: dist/
+
+      - name: Download smoke-boot binary
+        uses: actions/download-artifact@v4
+        with:
+          name: smoke-boot
+          run-id: ${{ steps.run.outputs.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: bin/
+
+      - name: Make smoke-boot executable
+        run: chmod +x bin/smoke-boot
+
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            lintian qemu-system-x86 ovmf
+
+      - name: Run lintian
+        run: lintian dist/*.deb
+
+      - name: Run QEMU smoke-boot
+        run: |
+          bin/smoke-boot \
+            --iso dist/linus.iso \
+            --timeout 300 \
+            --marker "gdm" \
+            --marker "mantle"
+        timeout-minutes: 10
+
+      # Re-upload the validated artifacts so release.yml can consume them
+      # without having to trace back to the original build run ID.
+      - name: Upload validated dist
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validated-dist
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error

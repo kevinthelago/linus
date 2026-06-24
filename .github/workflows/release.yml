@@ -1,0 +1,238 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: [Test]
+    types: [completed]
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: write   # create/delete GitHub Releases and tags
+  pages: write      # deploy to GitHub Pages
+  id-token: write   # OIDC for Pages deployment
+  actions: read     # download artifacts from the test workflow run
+
+concurrency:
+  group: release-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false   # never interrupt an in-flight publish
+
+jobs:
+  # ── 1. Sign ────────────────────────────────────────────────────────────────
+  sign:
+    name: Sign artifacts
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag:     ${{ steps.meta.outputs.tag }}
+      channel: ${{ steps.meta.outputs.channel }}
+      is_production: ${{ steps.meta.outputs.is_production }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Resolve version and release channel
+        id: meta
+        run: |
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          if [ "$BRANCH" = "main" ]; then
+            TAG="v$VERSION"
+            CHANNEL=stable
+            IS_PROD=true
+          else
+            TAG=nightly
+            CHANNEL=testing
+            IS_PROD=false
+          fi
+          echo "version=$VERSION"   >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG"           >> "$GITHUB_OUTPUT"
+          echo "channel=$CHANNEL"   >> "$GITHUB_OUTPUT"
+          echo "is_production=$IS_PROD" >> "$GITHUB_OUTPUT"
+
+      - name: Download validated artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: validated-dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: dist/
+
+      - name: Import GPG signing key
+        env:
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+        run: printf '%s' "$GPG_SIGNING_KEY" | gpg --batch --import
+
+      - name: Sign ISO
+        env:
+          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+        run: |
+          printf '%s' "$GPG_SIGNING_PASSPHRASE" | \
+            gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-fd 0 \
+            --detach-sign --armor dist/linus.iso
+
+      - name: Generate and sign checksums
+        env:
+          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+        run: |
+          sha256sum dist/linus.iso > dist/SHA256SUMS
+          printf '%s' "$GPG_SIGNING_PASSPHRASE" | \
+            gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-fd 0 \
+            --detach-sign --armor dist/SHA256SUMS
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-dist
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error
+
+  # ── 2a. GitHub Release ─────────────────────────────────────────────────────
+  publish-release:
+    name: Publish GitHub Release
+    needs: sign
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ needs.sign.outputs.tag }}
+      VERSION: ${{ needs.sign.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download signed artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-dist
+          path: dist/
+
+      - name: Publish release (recreate strategy)
+        run: |
+          if [ "${{ needs.sign.outputs.is_production }}" = "true" ]; then
+            TITLE="Linus ${VERSION}"
+            PRERELEASE=""
+          else
+            TITLE="Linus nightly (develop)"
+            PRERELEASE="--prerelease"
+          fi
+
+          ASSETS=(
+            dist/linus.iso
+            dist/linus.iso.asc
+            dist/SHA256SUMS
+            dist/SHA256SUMS.asc
+          )
+
+          # Prepare the signed release as a draft before touching the existing one.
+          # If draft creation fails (e.g. tag collision), delete old release and retry once.
+          create_draft() {
+            gh release create "$TAG" \
+              --title "$TITLE" \
+              --notes "Built from \`${{ github.event.workflow_run.head_sha }}\`." \
+              --draft \
+              $PRERELEASE \
+              "${ASSETS[@]}"
+          }
+
+          if ! create_draft 2>/dev/null; then
+            echo "Tag/release already exists — deleting and recreating."
+            gh release delete "$TAG" --cleanup-tag --yes 2>/dev/null || true
+            create_draft
+          fi
+
+          # All assets uploaded; make the release public.
+          gh release edit "$TAG" --draft=false
+
+  # ── 2b. apt repo → GitHub Pages ───────────────────────────────────────────
+  publish-apt:
+    name: Publish apt repo to Pages
+    needs: sign
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CHANNEL: ${{ needs.sign.outputs.channel }}
+      TAG: ${{ needs.sign.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download signed artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-dist
+          path: dist/
+
+      - name: Configure git identity
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+
+      - name: Set up gh-pages worktree
+        run: |
+          if git fetch origin gh-pages:refs/heads/gh-pages 2>/dev/null; then
+            git worktree add /tmp/pages gh-pages
+          else
+            git worktree add --orphan /tmp/pages gh-pages
+            echo "# Linus apt repository" > /tmp/pages/README.md
+            git -C /tmp/pages add README.md
+            git -C /tmp/pages commit -m "Initialize gh-pages"
+          fi
+
+      - name: Update apt channel
+        run: |
+          mkdir -p "/tmp/pages/${CHANNEL}"
+          if [ -d dist/apt-repo ]; then
+            rsync -a --delete dist/apt-repo/ "/tmp/pages/${CHANNEL}/"
+          fi
+          git -C /tmp/pages add -A
+          git -C /tmp/pages diff --cached --quiet || \
+            git -C /tmp/pages commit -m "deploy: apt-repo (${CHANNEL}) ${TAG}"
+
+      - name: Push gh-pages
+        run: |
+          git -C /tmp/pages remote set-url origin \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git -C /tmp/pages push origin gh-pages
+
+  # ── 3. Prune old production releases (keep-3) ──────────────────────────────
+  prune:
+    name: Prune old releases (keep-3)
+    needs: [sign, publish-release]
+    runs-on: ubuntu-latest
+    if: >-
+      needs.sign.result == 'success' &&
+      needs.publish-release.result == 'success' &&
+      needs.sign.outputs.is_production == 'true'
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Delete releases older than the 3 most recent
+        run: |
+          gh release list \
+            --repo "${{ github.repository }}" \
+            --limit 100 \
+            --json tagName,createdAt \
+          | jq -r '
+              [.[] | select(.tagName | test("^v[0-9]"))]
+              | sort_by(.createdAt) | reverse
+              | .[3:] | .[].tagName
+            ' \
+          | while IFS= read -r stale_tag; do
+              echo "Pruning: $stale_tag"
+              gh release delete "$stale_tag" \
+                --cleanup-tag --yes \
+                --repo "${{ github.repository }}" || true
+            done
