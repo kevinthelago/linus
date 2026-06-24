@@ -28,7 +28,7 @@ cat > /etc/greetd/autologin.toml <<'TOML'
 vt = "next"
 
 [default_session]
-command = "/usr/lib/linus/linus-session.sh"
+command = "/usr/bin/linus-session"
 user = "user"
 TOML
 
@@ -43,9 +43,10 @@ ExecStart=
 ExecStart=/usr/sbin/greetd --config /etc/greetd/autologin.toml
 UNIT
 
-# -- Phase 1 session stub: a minimal linus-session.sh --
-# linus-session package provides the authoritative version; this is a
-# build-time fallback so the ISO can boot without the linus apt repo.
+# -- Phase 1 session stub: a minimal linus-session --
+# linus-session package provides the authoritative /usr/bin/linus-session.
+# This stub lands at the same path so the live ISO can boot without the
+# linus apt repo.  The linus-session postinst overwrites it on install.
 mkdir -p /usr/lib/linus
 cat > /usr/lib/linus/linus-session.sh <<'SH'
 #!/bin/sh
@@ -63,6 +64,9 @@ export GTK_USE_PORTAL=1
 exec /usr/bin/sway
 SH
 chmod 755 /usr/lib/linus/linus-session.sh
+# Expose at the contract path so autologin.toml and the .desktop entry work
+# both on the live ISO (stub) and on installed systems (linus-session pkg).
+ln -sf /usr/lib/linus/linus-session.sh /usr/bin/linus-session
 
 # -- Phase 1 sway drop-in: autostart mantle under sway --
 # linus-session installs /etc/sway/config.d/90-mantle.conf; this fallback

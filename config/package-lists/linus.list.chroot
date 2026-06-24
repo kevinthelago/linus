@@ -25,13 +25,18 @@ gtkgreet
 
 # --- Audio ---
 pipewire
+pipewire-audio
 pipewire-pulse
 wireplumber
+libspa-0.2-bluetooth
 pavucontrol
 
 # --- Network ---
 network-manager
 network-manager-gnome
+
+# --- Power management ---
+upower
 
 # --- XDG portals (required by mantle / Tauri 2) ---
 xdg-desktop-portal
@@ -42,14 +47,18 @@ xdg-desktop-portal-gtk
 dbus-user-session
 polkit
 policykit-1-gnome
+xdg-utils
 
 # --- Fonts ---
 fonts-noto-core
 fonts-noto-color-emoji
+fonts-noto-mono
 
 # --- Browser and file manager ---
 firefox-esr
 thunar
+gvfs
+gvfs-backends
 
 # --- mantle runtime dependencies ---
 # mantle itself comes from the linus apt repo; these are its Tauri 2 runtime Depends.

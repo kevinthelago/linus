@@ -45,7 +45,9 @@ iso-build: ## Assemble the ISO (run as root: sudo make iso-build)
 	@if [ -f binary.hybrid.iso ]; then \
 	    mkdir -p $(DIST_DIR); \
 	    cp binary.hybrid.iso $(DIST_DIR)/linus.iso; \
+	    ( cd $(DIST_DIR) && sha256sum linus.iso > linus.iso.sha256 ); \
 	    echo "[iso] Written to $(DIST_DIR)/linus.iso"; \
+	    echo "[iso] Checksum: $(DIST_DIR)/linus.iso.sha256"; \
 	    $(MAKE) iso-size; \
 	else \
 	    echo "[iso] ERROR: binary.hybrid.iso not produced — check lb build output"; \
