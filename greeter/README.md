@@ -75,3 +75,30 @@ To customise: edit `/etc/greetd/gtkgreet.css` directly (it is a `conffile` so
 gtkgreet shows a session dropdown populated from `/usr/share/wayland-sessions/`.
 The user selects a session before entering credentials; greetd starts the
 chosen session's `Exec` command in the authenticated user's context.
+
+---
+
+## Multi-seat and multi-display
+
+greetd supports multi-seat via its `vt` setting — each seat runs its own greetd
+instance on a separate VT. linus ships a single default seat configuration
+(`vt = "next"`); multi-seat requires separate greetd instances configured
+manually under `/etc/greetd/`.
+
+gtkgreet under cage is single-display. For a multi-monitor setup the cage
+window appears on the primary output only; secondary outputs are blank until the
+user session starts (where the compositor manages all outputs normally).
+
+Multi-seat and multi-display beyond the single-primary-output case are out of
+scope for v1. Operators needing multi-seat should configure independent greetd
+instances with separate VT and `user` settings per seat.
+
+---
+
+## Edge cases
+
+| Condition | Behaviour |
+|---|---|
+| `/usr/share/wayland-sessions/` is empty | gtkgreet shows an empty session dropdown; the user can still attempt a login but no session will start. Prevented in practice by the `linus-session` package, which ships three session entries and declares `Depends: linus-session` in `linus-greeter`. |
+| gtkgreet crashes | systemd restarts `greetd.service` after 3 s via the `Restart=on-failure` drop-in; the VT is recovered automatically. |
+| Auth failure | gtkgreet clears the password field and shows an inline error message; the user can retry immediately. No lockout is applied at the greeter layer — configure PAM (`/etc/pam.d/greetd`) for rate-limiting if required. |
