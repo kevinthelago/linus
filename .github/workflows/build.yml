@@ -26,7 +26,14 @@ jobs:
             build-essential dpkg-dev debhelper lintian \
             reprepro gnupg \
             squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools isolinux \
+            live-build debootstrap \
+            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev libssl-dev \
             qemu-system-x86 ovmf
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
