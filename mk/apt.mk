@@ -27,7 +27,14 @@ SNAPSHOT_URL := http://snapshot.debian.org/archive/debian/$(SNAPSHOT)/
 # Normalise the signing key variable: prefer LINUS_GPG_KEY, accept GPG_SIGNING_KEY.
 LINUS_GPG_KEY ?= $(GPG_SIGNING_KEY)
 
-.PHONY: apt-repo apt-repo-clean backport-hyprland
+.PHONY: packages apt-repo apt-repo-clean backport-hyprland
+
+# --------------------------------------------------------------------------- #
+# packages: aggregate target that builds every .deb in this repo before the
+# apt repository is populated.  CI calls this first, then apt-repo.
+# --------------------------------------------------------------------------- #
+
+packages: meta-package session branding greeter installer-deb
 
 # --------------------------------------------------------------------------- #
 # apt-repo: seed the repository config then include all built .deb files.
