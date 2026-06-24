@@ -19,17 +19,19 @@ strings:
     releaseNotesUrl:      "https://github.com/kevinthelago/linus/releases"
 
 images:
-    # Provided by linus-branding — installed alongside this file.
-    productLogo:          "linus-logo.png"
-    productIcon:          "linus-icon.png"
-    productWelcome:       "linus-welcome.png"
+    # SVGs copied from branding/icons/ by mk/installer.mk at build time.
+    productLogo:          "linus-logo.svg"
+    productIcon:          "linus-icon.svg"
+    # Wallpaper installed by linus-branding (a Depends of this package).
+    productWelcome:       "/usr/share/backgrounds/linus/default.svg"
 
 slideshow:      "show.qml"
 slideshowAPI:   2
 
 style:
-    sidebarBackground:          "#1a1a2e"
-    sidebarText:                "#e8e8f0"
-    sidebarTextSelect:          "#7b68ee"
-    sidebarTextHighlight:       "#7b68ee"
-    sidebarBackgroundSelected:  "#2d2d4e"
+    # Catppuccin Mocha — matches branding/mantle/theme/tokens.css
+    sidebarBackground:          "#1e1e2e"
+    sidebarText:                "#cdd6f4"
+    sidebarTextSelect:          "#cba6f7"
+    sidebarTextHighlight:       "#cba6f7"
+    sidebarBackgroundSelected:  "#313244"

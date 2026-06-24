@@ -3,6 +3,7 @@ Version: 1.0.0
 Architecture: all
 Maintainer: linus contributors <kevinthelago@gmail.com>
 Depends: calamares (>= 3.2),
+         linus-branding,
          python3-pyaml,
          kpartx,
          grub-efi-amd64 [amd64] | grub-pc,

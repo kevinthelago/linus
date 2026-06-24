@@ -32,6 +32,10 @@ installer-install:
 		$(CALAMARES_CONF)/branding/linus/branding.desc
 	install -m 644 $(INSTALLER_SRC)/branding/linus/show.qml \
 		$(CALAMARES_CONF)/branding/linus/show.qml
+	install -m 644 branding/icons/linus-logo.svg \
+		$(CALAMARES_CONF)/branding/linus/linus-logo.svg
+	install -m 644 branding/icons/linus-logo-32.svg \
+		$(CALAMARES_CONF)/branding/linus/linus-icon.svg
 	for f in $(INSTALLER_SRC)/modules/*.conf; do \
 		install -m 644 "$$f" $(CALAMARES_CONF)/modules/; \
 	done
