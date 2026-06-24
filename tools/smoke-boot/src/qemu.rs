@@ -47,6 +47,7 @@ pub fn spawn(iso: &str, qmp_socket: &str) -> Result<(QemuChild, ChildStdout)> {
 
     let mut child = Command::new("qemu-system-x86_64")
         .args(&args)
+        .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()

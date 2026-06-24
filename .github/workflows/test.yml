@@ -69,14 +69,14 @@ jobs:
             lintian qemu-system-x86 ovmf
 
       - name: Run lintian
-        run: lintian dist/*.deb
+        run: lintian --fail-on error dist/*.deb
 
       - name: Run QEMU smoke-boot
         run: |
           bin/smoke-boot \
             --iso dist/linus.iso \
             --timeout 300 \
-            --marker "gdm" \
+            --marker "greetd" \
             --marker "mantle"
         timeout-minutes: 10
 
