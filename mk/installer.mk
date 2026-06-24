@@ -3,6 +3,7 @@
 #
 # Targets:
 #   installer-install   Copy Calamares settings into $(DESTDIR) (for live-build hooks / deb build)
+#   installer-deb       Build calamares-settings-linus_*.deb into dist/packages/
 #   installer-check     Validate YAML and shell syntax of all installer files
 #   installer-clean     Remove previously installed files from $(DESTDIR)
 
@@ -13,7 +14,11 @@ CALAMARES_HOOK_LIB    := $(DESTDIR)/usr/lib/calamares-settings-linus/hooks
 XDG_AUTOSTART         := $(DESTDIR)/etc/xdg/autostart
 USR_APPS              := $(DESTDIR)/usr/share/applications
 
-.PHONY: installer-install installer-check installer-clean
+INSTALLER_PKG_NAME    := calamares-settings-linus
+INSTALLER_PKG_VERSION := 1.0.0
+DIST_PKG_DIR          := dist/packages
+
+.PHONY: installer-install installer-deb installer-check installer-clean
 
 installer-install:
 	install -d $(CALAMARES_CONF)/branding/linus
@@ -37,6 +42,21 @@ installer-install:
 	install -m 644 installer/linus-installer.desktop \
 		$(USR_APPS)/linus-installer.desktop
 
+installer-deb: installer-check
+	@echo "==> Building $(INSTALLER_PKG_NAME)_$(INSTALLER_PKG_VERSION).deb..."
+	$(eval DEB_STAGE := $(shell mktemp -d))
+	$(MAKE) installer-install DESTDIR=$(DEB_STAGE)
+	install -d $(DEB_STAGE)/DEBIAN
+	install -m 644 installer/debian/control $(DEB_STAGE)/DEBIAN/control
+	install -m 755 installer/debian/postinst $(DEB_STAGE)/DEBIAN/postinst
+	sed -i "s/^Version:.*/Version: $(INSTALLER_PKG_VERSION)/" \
+		$(DEB_STAGE)/DEBIAN/control
+	install -d $(DIST_PKG_DIR)
+	dpkg-deb --build --root-owner-group $(DEB_STAGE) \
+		$(DIST_PKG_DIR)/$(INSTALLER_PKG_NAME)_$(INSTALLER_PKG_VERSION)_all.deb
+	rm -rf $(DEB_STAGE)
+	@echo "==> $(DIST_PKG_DIR)/$(INSTALLER_PKG_NAME)_$(INSTALLER_PKG_VERSION)_all.deb"
+
 installer-check:
 	@echo "==> Checking Calamares YAML syntax..."
 	@for f in $$(find installer/calamares -name '*.conf' -o -name '*.desc'); do \
@@ -56,3 +76,4 @@ installer-clean:
 	rm -rf $(CALAMARES_HOOK_LIB)
 	rm -f  $(XDG_AUTOSTART)/linus-installer.desktop
 	rm -f  $(USR_APPS)/linus-installer.desktop
+	rm -f  $(DIST_PKG_DIR)/$(INSTALLER_PKG_NAME)_$(INSTALLER_PKG_VERSION)_all.deb

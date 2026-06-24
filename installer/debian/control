@@ -1,0 +1,25 @@
+Package: calamares-settings-linus
+Version: 1.0.0
+Architecture: all
+Maintainer: linus contributors <kevinthelago@gmail.com>
+Depends: calamares (>= 3.2),
+         python3-pyaml,
+         kpartx,
+         grub-efi-amd64 [amd64] | grub-pc,
+         dosfstools,
+         squashfs-tools,
+         gptfdisk | gdisk,
+         efibootmgr [amd64],
+         cage,
+         gtkgreet,
+         greetd
+Recommends: btrfs-progs, xfsprogs, cryptsetup-bin
+Description: Calamares installer settings for linus
+ Branded configuration for the Calamares graphical installer,
+ pre-configured for the linus Debian-based distribution. Installs
+ the linus desktop from a live squashfs image to disk, supporting
+ UEFI and BIOS boot, optional LUKS full-disk encryption, and
+ configures greetd with the mantle Wayland session as default.
+ .
+ This package is intended to be installed only in the live image
+ and is removed from the target system by the installer itself.

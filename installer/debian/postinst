@@ -1,0 +1,15 @@
+#!/bin/sh
+# postinst for calamares-settings-linus
+# Calamares reads /etc/calamares/ directly; no additional setup required.
+set -e
+
+case "$1" in
+    configure)
+        # Ensure the hook script is executable (dpkg preserves permissions,
+        # but belt-and-suspenders for manual installs).
+        chmod 755 /usr/lib/calamares-settings-linus/hooks/post-install.sh
+        ;;
+esac
+
+#DEBHELPER#
+exit 0
