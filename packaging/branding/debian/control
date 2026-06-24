@@ -1,0 +1,21 @@
+Source: linus-branding
+Section: misc
+Priority: optional
+Maintainer: Kevin Lago <kevinthelago@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/kevinthelago/linus
+
+Package: linus-branding
+Architecture: all
+Depends: ${misc:Depends},
+         plymouth,
+         plymouth-themes
+Recommends: grub2-common
+Description: linus visual identity and branding assets
+ Provides the full linus visual identity: os-release, Plymouth boot theme,
+ default wallpaper, logo/icon assets, default mantle theme tokens and config,
+ gtkgreet stylesheet, and GRUB boot-menu branding.
+ .
+ All assets are installed at stable paths consumed by the greeter, session,
+ and image streams.

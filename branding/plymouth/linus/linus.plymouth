@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=linus
+Description=linus boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/linus
+ScriptFile=/usr/share/plymouth/themes/linus/linus.script

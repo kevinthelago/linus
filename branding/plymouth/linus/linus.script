@@ -1,0 +1,108 @@
+/* linus Plymouth boot theme
+ * Falls back gracefully when KMS / framebuffer is unavailable.
+ * Uses the script module (vector-capable) with a text fallback path.
+ */
+
+/* ── palette ── */
+BG_R = 0.059; BG_G = 0.067; BG_B = 0.091;   /* #0f1117 */
+FG_R = 0.886; FG_G = 0.910; FG_B = 0.941;   /* #e2e8f0 */
+AC_R = 0.486; AC_G = 0.416; AC_B = 1.000;   /* #7c6aff */
+
+Window.SetBackgroundTopColor(BG_R, BG_G, BG_B);
+Window.SetBackgroundBottomColor(BG_R, BG_G, BG_B);
+
+screen_width  = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+/* ── wordmark sprite ── */
+fun DrawWordmark() {
+    text_image = Image.Text("linus", FG_R, FG_G, FG_B, 1.0, "Sans 28");
+    sprite = Sprite(text_image);
+    x = Math.Int((screen_width  - text_image.GetWidth())  / 2);
+    y = Math.Int( screen_height * 0.42);
+    sprite.SetPosition(x, y, 0);
+    return sprite;
+}
+
+wordmark_sprite = DrawWordmark();
+
+/* ── progress dots ── */
+DOT_COUNT   = 5;
+DOT_RADIUS  = 6;
+DOT_SPACING = 20;
+DOT_Y_OFFSET = 80;  /* px below wordmark */
+
+dot_sprites = [];
+
+fun DrawDots() {
+    total_width = DOT_COUNT * (DOT_RADIUS * 2) + (DOT_COUNT - 1) * DOT_SPACING;
+    start_x = Math.Int((screen_width - total_width) / 2);
+    base_y  = Math.Int(screen_height * 0.42) + DOT_Y_OFFSET;
+
+    for (i = 0; i < DOT_COUNT; i++) {
+        dot = Image(DOT_RADIUS * 2, DOT_RADIUS * 2);
+        dot = dot.Scale(DOT_RADIUS * 2, DOT_RADIUS * 2);
+        s = Sprite();
+        s.SetImage(Image.Text("·", FG_R, FG_G, FG_B, 0.25, "Sans 14"));
+        s.SetPosition(start_x + i * (DOT_RADIUS * 2 + DOT_SPACING), base_y, 1);
+        dot_sprites[i] = s;
+    }
+}
+
+DrawDots();
+
+tick = 0;
+
+fun refresh_callback() {
+    active = tick % DOT_COUNT;
+    for (i = 0; i < DOT_COUNT; i++) {
+        if (i == active) {
+            dot_sprites[i].SetImage(Image.Text("·", AC_R, AC_G, AC_B, 1.0, "Sans 14"));
+        } else {
+            dot_sprites[i].SetImage(Image.Text("·", FG_R, FG_G, FG_B, 0.25, "Sans 14"));
+        }
+    }
+    tick++;
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+/* ── boot messages (text fallback) ── */
+message_sprite = NULL;
+
+fun message_callback(text) {
+    if (message_sprite != NULL) {
+        message_sprite.SetImage(Image.Text("", FG_R, FG_G, FG_B, 0));
+    }
+    msg_img = Image.Text(text, FG_R, FG_G, FG_B, 0.55, "Monospace 10");
+    message_sprite = Sprite(msg_img);
+    message_sprite.SetPosition(
+        Math.Int((screen_width - msg_img.GetWidth()) / 2),
+        Math.Int(screen_height * 0.90),
+        2
+    );
+}
+
+Plymouth.SetMessageFunction(message_callback);
+
+/* ── password dialog ── */
+fun password_callback(prompt, bullets) {
+    DrawWordmark();
+    prompt_img  = Image.Text(prompt, FG_R, FG_G, FG_B, 0.8, "Sans 14");
+    bullets_img = Image.Text(String.Repeat("●", bullets), AC_R, AC_G, AC_B, 1.0, "Sans 14");
+
+    ps = Sprite(prompt_img);
+    ps.SetPosition(
+        Math.Int((screen_width  - prompt_img.GetWidth()) / 2),
+        Math.Int( screen_height * 0.52),
+        3
+    );
+    bs = Sprite(bullets_img);
+    bs.SetPosition(
+        Math.Int((screen_width  - bullets_img.GetWidth()) / 2),
+        Math.Int( screen_height * 0.58),
+        3
+    );
+}
+
+Plymouth.SetDisplayPasswordFunction(password_callback);

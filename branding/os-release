@@ -1,0 +1,11 @@
+NAME="linus"
+PRETTY_NAME="linus 1"
+ID=linus
+ID_LIKE=debian
+VERSION="1"
+VERSION_ID="1"
+VERSION_CODENAME="one"
+HOME_URL="https://github.com/kevinthelago/linus"
+SUPPORT_URL="https://github.com/kevinthelago/linus/issues"
+BUG_REPORT_URL="https://github.com/kevinthelago/linus/issues"
+LOGO=linus-logo

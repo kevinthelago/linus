@@ -1,0 +1,107 @@
+/* linus gtkgreet theme
+ * Applied via: gtkgreet -s /usr/share/linus/gtkgreet/style.css
+ */
+
+/* ── colour tokens ── */
+@define-color bg-base    #0f1117;
+@define-color bg-surface #1a1b26;
+@define-color bg-muted   #24263a;
+@define-color fg-default #e2e8f0;
+@define-color fg-subtle  #8892a4;
+@define-color accent     #7c6aff;
+@define-color accent-dim #5a4cd6;
+@define-color error      #f87171;
+@define-color border     rgba(226, 232, 240, 0.08);
+
+/* ── root window ── */
+window {
+  background-color: @bg-base;
+  color: @fg-default;
+}
+
+/* ── login card ── */
+box#body {
+  background-color: @bg-surface;
+  border: 1px solid @border;
+  border-radius: 12px;
+  padding: 40px 48px;
+  min-width: 360px;
+}
+
+/* ── wordmark / header ── */
+label#body-header {
+  color: @fg-default;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: 6px;
+  margin-bottom: 32px;
+}
+
+/* ── form fields ── */
+entry {
+  background-color: @bg-muted;
+  border: 1px solid @border;
+  border-radius: 6px;
+  color: @fg-default;
+  padding: 10px 14px;
+  font-size: 14px;
+  caret-color: @accent;
+}
+
+entry:focus {
+  border-color: @accent;
+  outline: none;
+}
+
+entry placeholder {
+  color: @fg-subtle;
+}
+
+/* ── submit button ── */
+button {
+  background-color: @accent;
+  border: none;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 24px;
+  margin-top: 16px;
+  transition: background-color 120ms ease;
+}
+
+button:hover {
+  background-color: @accent-dim;
+}
+
+button:active {
+  background-color: @accent-dim;
+}
+
+/* ── session selector ── */
+combobox,
+combobox > button {
+  background-color: @bg-muted;
+  border: 1px solid @border;
+  border-radius: 6px;
+  color: @fg-default;
+  padding: 8px 12px;
+}
+
+combobox > button:hover {
+  border-color: @accent;
+}
+
+/* ── error messages ── */
+label.error {
+  color: @error;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* ── clock / date label (if enabled) ── */
+label#time {
+  color: @fg-subtle;
+  font-size: 13px;
+  font-weight: 300;
+}

@@ -1,0 +1,51 @@
+# linus default mantle configuration
+# Installed to /etc/skel/.config/mantle/config.toml
+# (system fallback: /etc/mantle/config.toml)
+
+[general]
+theme = "~/.config/mantle/theme.css"   # user override; falls back to system default
+log_level = "warn"
+
+[bar]
+position = "top"         # "top" | "bottom"
+height   = 40
+margin   = 0             # px gap between bar and screen edge (0 = flush)
+
+# modules listed left → right; use the module keys defined below
+modules_left   = ["launcher", "workspaces"]
+modules_center = ["clock"]
+modules_right  = ["systray", "network", "audio", "battery", "session"]
+
+[modules.launcher]
+icon  = "linus-logo"     # icon-theme name (falls back to text "linus")
+label = ""               # empty = icon-only
+
+[modules.workspaces]
+show_empty = false        # hide workspaces with no windows
+numbered   = true
+
+[modules.clock]
+format     = "%H:%M"      # 24-hour; change to "%-I:%M %p" for 12-hour
+date_format = "%a, %b %-d"
+tooltip    = true
+
+[modules.network]
+show_ssid = true
+show_speed = false
+
+[modules.audio]
+backend = "pipewire"
+scroll_step = 5           # % per scroll tick
+
+[modules.battery]
+warn_threshold    = 20    # % — turns warning colour
+critical_threshold = 10   # % — turns error colour
+
+[modules.session]
+# buttons shown in the session menu
+actions = ["lock", "logout", "suspend", "reboot", "shutdown"]
+
+[compositor]
+# Automatically detected from SWAYSOCK / HYPRLAND_INSTANCE_SIGNATURE
+# Explicit override: "sway" | "hyprland"
+# backend = "sway"

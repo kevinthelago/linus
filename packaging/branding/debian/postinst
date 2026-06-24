@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Register Plymouth theme and set as default if no user theme is set
+        if command -v update-alternatives >/dev/null 2>&1; then
+            update-alternatives --install \
+                /usr/share/plymouth/themes/default.plymouth \
+                default.plymouth \
+                /usr/share/plymouth/themes/linus/linus.plymouth \
+                50 || true
+        fi
+        if command -v update-initramfs >/dev/null 2>&1; then
+            update-initramfs -u 2>/dev/null || true
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+exit 0
