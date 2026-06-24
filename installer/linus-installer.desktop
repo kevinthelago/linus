@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Install linus
+Comment=Install linus to your hard drive
+Exec=calamares
+Icon=calamares
+Type=Application
+Terminal=false
+Categories=System;
+Keywords=install;installer;
+# Do not auto-start in the installed system; the packages module removes this file.
+NoDisplay=false
