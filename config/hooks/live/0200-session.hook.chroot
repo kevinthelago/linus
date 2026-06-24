@@ -1,0 +1,16 @@
+#!/bin/sh
+# 0200-session.hook.chroot
+# Install the linus Wayland session entry and ensure required dirs exist.
+set -eu
+
+# linus.desktop is installed via includes.chroot; just set permissions here.
+chmod 644 /usr/share/wayland-sessions/linus.desktop 2>/dev/null || true
+
+# Ensure pipewire socket dir and user service are enabled for the live user.
+# (live-config creates the user; systemctl --user runs per-session, not here)
+
+# NetworkManager enabled for the live session.
+systemctl enable NetworkManager.service 2>/dev/null || true
+
+# Enable polkit for privilege escalation.
+systemctl enable polkit.service 2>/dev/null || true

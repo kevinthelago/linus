@@ -1,0 +1,4 @@
+#!/bin/sh
+# config/auto/build — called automatically by `lb build`.
+set -eu
+lb build noauto "${@}"

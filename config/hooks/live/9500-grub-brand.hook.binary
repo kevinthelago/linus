@@ -1,0 +1,23 @@
+#!/bin/sh
+# 9500-grub-brand.hook.binary
+# Replace generic Debian labels with "linus" in the generated GRUB and syslinux menus.
+set -eu
+
+# GRUB 2 (UEFI path)
+for cfg in binary/boot/grub/grub.cfg binary/EFI/boot/grub.cfg; do
+    [ -f "$cfg" ] || continue
+    sed -i \
+        -e 's/Debian GNU\/Linux/linus/g' \
+        -e 's/debian/linus/g' \
+        "$cfg"
+done
+
+# syslinux / isolinux (BIOS path)
+for cfg in binary/isolinux/live.cfg binary/isolinux/isolinux.cfg \
+           binary/syslinux/live.cfg binary/syslinux/syslinux.cfg; do
+    [ -f "$cfg" ] || continue
+    sed -i \
+        -e 's/Debian GNU\/Linux/linus/g' \
+        -e 's/Debian/linus/g' \
+        "$cfg"
+done

@@ -1,0 +1,18 @@
+#!/bin/sh
+# 0100-autologin.hook.chroot
+# Phase 1 autologin: configure getty@tty1 to log in the live user automatically.
+# Phase 2 (desktop stream): remove this hook and replace with greetd+gtkgreet.
+set -eu
+
+LIVE_USER="user"
+
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf <<'UNIT'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin user --noclear %I linux
+Type=simple
+UNIT
+
+# Ensure the tty1 getty is enabled (it is by default, but be explicit).
+systemctl enable getty@tty1.service 2>/dev/null || true

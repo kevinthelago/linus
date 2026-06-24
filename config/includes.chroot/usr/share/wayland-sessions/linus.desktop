@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=linus
+Comment=linus desktop session (sway + mantle)
+Exec=sway
+Type=Application
+DesktopNames=linus
+Keywords=wayland;sway;mantle;

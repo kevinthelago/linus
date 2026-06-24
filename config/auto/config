@@ -1,0 +1,42 @@
+#!/bin/sh
+# config/auto/config — called automatically by `lb config`; do not invoke directly.
+#
+# Environment (exported by mk/iso.mk):
+#   SNAPSHOT_DATE    Pinned debian snapshot date (e.g. 20260601T000000Z)
+#   LINUS_REPO_URL   APT URL for the linus package repo (empty = skip)
+set -eu
+
+: "${SNAPSHOT_DATE:=20260601T000000Z}"
+SNAPSHOT_DEB="http://snapshot.debian.org/archive/debian/${SNAPSHOT_DATE}/"
+SNAPSHOT_SEC="http://snapshot.debian.org/archive/debian-security/${SNAPSHOT_DATE}/"
+
+# Generate linus apt archive source if a repo URL is provided.
+mkdir -p config/archives
+if [ -n "${LINUS_REPO_URL:-}" ]; then
+    printf 'deb [trusted=yes] %s linus main\n' "${LINUS_REPO_URL}" \
+        > config/archives/linus.list.chroot
+else
+    rm -f config/archives/linus.list.chroot
+fi
+
+lb config noauto \
+    --distribution             trixie \
+    --architecture             amd64 \
+    --binary-images            iso-hybrid \
+    --bootloaders              "syslinux,grub-efi-amd64" \
+    --debian-installer         none \
+    --iso-application          "linus" \
+    --iso-publisher            "linus project <https://github.com/kevinthelago/linus>" \
+    --iso-volume               "LINUS_LIVE" \
+    --mirror-bootstrap         "${SNAPSHOT_DEB}" \
+    --mirror-chroot            "${SNAPSHOT_DEB}" \
+    --mirror-chroot-security   "${SNAPSHOT_SEC}" \
+    --mirror-binary            "${SNAPSHOT_DEB}" \
+    --mirror-binary-security   "${SNAPSHOT_SEC}" \
+    --apt-options              "--yes -oAcquire::Check-Valid-Until=false" \
+    --security                 true \
+    --updates                  false \
+    --backports                false \
+    --memtest                  none \
+    --win32-loader             false \
+    "${@}"

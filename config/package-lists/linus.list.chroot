@@ -1,0 +1,60 @@
+# linus live image — chroot package list
+# Packages here are installed into the squashfs (the live system).
+#
+# Phase 1: sway autologin + mantle runtime deps.
+# Phase 2: add calamares (installer), linus-desktop meta-package.
+# Phase 2: replace this list with `linus-desktop` once the packaging stream ships it.
+
+# --- Wayland compositor ---
+sway
+swayidle
+swaylock
+swaybg
+
+# --- Terminal (live session fallback if mantle is absent) ---
+foot
+
+# --- Audio ---
+pipewire
+pipewire-pulse
+wireplumber
+pavucontrol
+
+# --- Network ---
+network-manager
+network-manager-gnome
+
+# --- XDG portals (required by mantle / Tauri 2) ---
+xdg-desktop-portal
+xdg-desktop-portal-wlr
+xdg-desktop-portal-gtk
+
+# --- Session plumbing ---
+dbus-user-session
+polkit
+policykit-1-gnome
+systemd
+
+# --- Fonts ---
+fonts-noto-core
+fonts-noto-color-emoji
+
+# --- Browser & file manager ---
+firefox-esr
+thunar
+
+# --- mantle runtime dependencies ---
+# (mantle itself comes from the linus apt repo; these satisfy its Tauri 2 Depends)
+libwebkit2gtk-4.1-0
+libayatana-appindicator3-1
+
+# --- Wayland utilities ---
+brightnessctl
+wl-clipboard
+grim
+slurp
+
+# --- Live system utilities ---
+curl
+wget
+git

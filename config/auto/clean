@@ -1,0 +1,4 @@
+#!/bin/sh
+# config/auto/clean — called automatically by `lb clean`.
+set -eu
+lb clean noauto "${@}"

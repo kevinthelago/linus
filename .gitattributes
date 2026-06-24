@@ -6,6 +6,7 @@
 # Explicitly mark binary formats so git never line-converts them.
 *.deb   binary
 *.iso   binary
+*.gpg   binary
 *.png   binary
 *.jpg   binary
 *.ico   binary
