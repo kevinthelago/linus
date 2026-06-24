@@ -8,9 +8,14 @@ if ! id -u greeter >/dev/null 2>&1; then
             --shell /bin/false --group greeter
 fi
 
-# Reload greetd if it's already running (e.g. on upgrade)
-if systemctl is-active --quiet greetd 2>/dev/null; then
-    systemctl restart greetd || true
+# Enable greetd so the login screen starts on boot.
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload || true
+    systemctl enable greetd.service || true
+    # Restart on upgrade if already running
+    if systemctl is-active --quiet greetd 2>/dev/null; then
+        systemctl restart greetd || true
+    fi
 fi
 
 #DEBHELPER#

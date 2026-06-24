@@ -21,7 +21,8 @@ greeter-stage: packaging/session/linus-greeter/DEBIAN/control
 		$(GREETER_STAGEDIR)/DEBIAN \
 		$(GREETER_STAGEDIR)/etc/greetd \
 		$(GREETER_STAGEDIR)/etc/pam.d \
-		$(GREETER_STAGEDIR)/etc/systemd/system/greetd.service.d
+		$(GREETER_STAGEDIR)/etc/systemd/system/greetd.service.d \
+		$(GREETER_STAGEDIR)/usr/share/doc/linus-greeter
 
 	# DEBIAN control files
 	cp packaging/session/linus-greeter/DEBIAN/control  $(GREETER_STAGEDIR)/DEBIAN/control
@@ -42,11 +43,18 @@ greeter-stage: packaging/session/linus-greeter/DEBIAN/control
 	cp greeter/pam/greetd $(GREETER_STAGEDIR)/etc/pam.d/
 	echo "/etc/pam.d/greetd" >> $(GREETER_STAGEDIR)/DEBIAN/conffiles
 
+	# Restart drop-in — ensures greetd recovers from crashes with a cooldown
+	cp greeter/systemd/greetd.service.d/linus.conf \
+		$(GREETER_STAGEDIR)/etc/systemd/system/greetd.service.d/linus.conf
+
 	# Live-ISO systemd drop-in (shipped but not activated on installed systems)
 	cp greeter/autologin.conf \
 		$(GREETER_STAGEDIR)/etc/systemd/system/greetd.service.d/autologin.conf.live-iso
 	# The image build hook renames .live-iso → the active override; do NOT
 	# activate it here or every installed system would autologin.
+
+	# Documentation
+	cp greeter/README.md $(GREETER_STAGEDIR)/usr/share/doc/linus-greeter/
 
 greeter-clean:
 	rm -rf $(GREETER_STAGEDIR) $(GREETER_DEB)
