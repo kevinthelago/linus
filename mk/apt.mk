@@ -1,6 +1,7 @@
 # mk/apt.mk — build and populate the linus signed apt repository.
 #
-# Outputs to dist/apt/; served statically (e.g. GitHub Pages).
+# Outputs to dist/repo/; consumed by mk/iso.mk for local ISO builds and
+# served statically (e.g. GitHub Pages) for installed-system updates.
 #
 # GPG signing:
 #   Set LINUS_GPG_KEY to a key fingerprint that is already in the local keyring.
@@ -12,11 +13,11 @@
 #   Read from snapshot.pin at the repo root. Update that file to advance the pin.
 #
 # Targets:
-#   apt-repo            populate dist/apt/ from dist/packages/*.deb
-#   apt-repo-clean      remove dist/apt/
+#   apt-repo            populate dist/repo/ from dist/packages/*.deb
+#   apt-repo-clean      remove dist/repo/
 #   backport-hyprland   build hyprland .debs via backports/hyprland/recipe.sh
 
-DIST_APT     := dist/apt
+DIST_APT     := dist/repo
 APT_CONF_SRC := apt/conf
 PACKAGES_DIR := dist/packages
 
