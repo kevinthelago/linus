@@ -1,3 +1,11 @@
+linus-desktop (1.0.0-2) trixie; urgency=medium
+
+  * Add linus-greeter to Depends: ships the greetd/gtkgreet configuration
+    that wires the linus session into the display manager; without it
+    greetd starts but does not present the linus session.
+
+ -- Kevin Lago <kevinthelago@gmail.com>  Wed, 24 Jun 2026 12:00:00 +0000
+
 linus-desktop (1.0.0-1) trixie; urgency=low
 
   * Initial packaging for linus 1.0 distribution.
