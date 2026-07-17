@@ -61,7 +61,11 @@ apt-repo: $(DIST_APT)/conf/distributions
 # does not fail — but the repo is unsigned.
 $(DIST_APT)/conf/distributions: $(APT_CONF_SRC)/distributions snapshot.pin
 	@mkdir -p $(DIST_APT)/conf
-ifdef LINUS_GPG_KEY
+# NB: `ifdef` is wrong here. LINUS_GPG_KEY is defined recursively (?= $(GPG_SIGNING_KEY)),
+# so its *definition text* is always non-empty and `ifdef` is always true — which emits a
+# valueless "SignWith:" and makes reprepro fail with "Missing value for SignWith field".
+# Test the expanded value instead.
+ifneq ($(strip $(LINUS_GPG_KEY)),)
 	@# If the value looks like ASCII-armored key material, import it first.
 	@if printf '%s' "$(LINUS_GPG_KEY)" | grep -q "^-----BEGIN PGP"; then \
 		echo "==> Importing GPG key material..."; \
