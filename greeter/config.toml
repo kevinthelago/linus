@@ -12,7 +12,12 @@ vt = "next"
 # gtkgreet runs under cage (a minimal Wayland compositor) so it gets its own
 # Wayland display isolated from the eventual user session.
 # -s  CSS stylesheet path
-# -e  read session entries from /usr/share/wayland-sessions/
 # -l  run in layer-shell fullscreen mode
-command = "cage -s -- gtkgreet -l -s /etc/greetd/gtkgreet.css -e"
+#
+# NB: gtkgreet has no -e flag (it takes -c/--command, -s/--style, -l/--layer-shell,
+# -d/--debug). Passing it made gtkgreet exit immediately with
+#   option parsing failed: Unknown option -e
+# so the greeter never started. Session entries are read from
+# /etc/greetd/environments by gtkgreet itself.
+command = "cage -s -- gtkgreet -l -s /etc/greetd/gtkgreet.css"
 user = "greeter"

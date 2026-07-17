@@ -8,6 +8,23 @@ if ! id -u greeter >/dev/null 2>&1; then
             --shell /bin/false --group greeter
 fi
 
+# --no-create-home above means /var/lib/greetd does not exist, so gtkgreet cannot
+# write its shader cache and logs:
+#   Failed to create /var/lib/greetd/.cache for shader cache (Permission denied)
+# Create it explicitly and hand it to the greeter.
+mkdir -p /var/lib/greetd
+chown greeter:greeter /var/lib/greetd
+chmod 0755 /var/lib/greetd
+
+# cage needs a seat to take the DRM device. Without membership of seatd's group the
+# greeter cannot open /run/seatd.sock:
+#   [libseat] Could not connect to socket /run/seatd.sock: Permission denied
+# and nothing renders. (On a logind seat this is granted dynamically; seatd is the
+# fallback path and needs the group.) video/input cover direct device access.
+for grp in _seatd seat video input render; do
+    getent group "$grp" >/dev/null 2>&1 && adduser greeter "$grp" >/dev/null 2>&1 || true
+done
+
 # Enable greetd so the login screen starts on boot.
 if [ -d /run/systemd/system ]; then
     systemctl daemon-reload || true
