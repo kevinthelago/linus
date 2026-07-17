@@ -12,6 +12,10 @@ Depends: ${misc:Depends},
          plymouth,
          plymouth-themes
 Recommends: grub2-common
+# os-release is shipped by base-files; taking that one file over requires an
+# explicit Replaces or dpkg aborts the unpack ("trying to overwrite
+# '/usr/lib/os-release', which is also in package base-files").
+Replaces: base-files
 Description: linus visual identity and branding assets
  Provides the full linus visual identity: os-release, Plymouth boot theme,
  default wallpaper, logo/icon assets, default mantle theme tokens and config,

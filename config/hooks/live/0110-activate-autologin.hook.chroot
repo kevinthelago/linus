@@ -1,0 +1,27 @@
+#!/bin/sh
+# 0110-activate-autologin.hook.chroot
+#
+# Activate the live-ISO autologin drop-in that linus-greeter ships but
+# deliberately does NOT enable.
+#
+# mk/greeter.mk stages the drop-in as autologin.conf.live-iso and notes that "the
+# image build hook renames .live-iso -> the active override" — but no such hook
+# existed, so the live image never armed autologin and booted to a login prompt
+# instead of a session. (0100-autologin.hook.chroot only installs a *fallback* and
+# correctly stands down when linus-greeter is installed, which it always is because
+# linus-desktop depends on it — so nothing armed autologin on either path.)
+#
+# This runs only in the live-image chroot, so installed systems keep the normal
+# greeter (/etc/greetd/config.toml) as intended.
+set -eu
+
+DROPIN_DIR=/etc/systemd/system/greetd.service.d
+STAGED="$DROPIN_DIR/autologin.conf.live-iso"
+ACTIVE="$DROPIN_DIR/autologin.conf"
+
+if [ -f "$STAGED" ]; then
+    echo "[autologin] Activating live-ISO autologin drop-in"
+    mv "$STAGED" "$ACTIVE"
+else
+    echo "[autologin] No staged drop-in at $STAGED — linus-greeter not installed?"
+fi

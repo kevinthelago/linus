@@ -27,14 +27,17 @@ ISO_SIZE_BUDGET_MIB := 2048
 
 # Detect a local linus apt repo built by the packaging stream.
 _LOCAL_REPO := $(abspath $(DIST_DIR)/repo)
-_LINUS_REPO_URL ?= $(if $(LINUS_REPO_URL),$(LINUS_REPO_URL),\
-    $(if $(wildcard $(_LOCAL_REPO)/conf/distributions),file://$(_LOCAL_REPO),))
+# $(strip ...) matters: the line-continuation below leaves a LEADING SPACE in the
+# expansion (" file:///..."), which breaks any consumer that pattern-matches the
+# scheme (auto/config's `case ... in file://*)`).
+_LINUS_REPO_URL ?= $(strip $(if $(LINUS_REPO_URL),$(LINUS_REPO_URL),\
+    $(if $(wildcard $(_LOCAL_REPO)/conf/distributions),file://$(_LOCAL_REPO),)))
 
 .PHONY: iso iso-config iso-build iso-clean iso-size
 
 iso: iso-clean iso-config iso-build ## Build the linus live ISO (requires root/loop devices)
 
-iso-config: ## Configure live-build (reads config/auto/config)
+iso-config: ## Configure live-build (reads auto/config at the project root)
 	@echo "[iso] Configuring (snapshot=$(SNAPSHOT_DATE))"
 	@mkdir -p $(DIST_DIR)
 	SNAPSHOT_DATE=$(SNAPSHOT_DATE) LINUS_REPO_URL='$(_LINUS_REPO_URL)' lb config $(ISO_LB_EXTRA)
@@ -42,22 +45,24 @@ iso-config: ## Configure live-build (reads config/auto/config)
 iso-build: ## Assemble the ISO (run as root: sudo make iso-build)
 	@echo "[iso] Building..."
 	lb build
-	@if [ -f binary.hybrid.iso ]; then \
+	@iso=$$(find . -maxdepth 1 -name '*.hybrid.iso' -print -quit); \
+	if [ -n "$$iso" ]; then \
 	    mkdir -p $(DIST_DIR); \
-	    cp binary.hybrid.iso $(DIST_DIR)/linus.iso; \
+	    cp "$$iso" $(DIST_DIR)/linus.iso; \
 	    ( cd $(DIST_DIR) && sha256sum linus.iso > linus.iso.sha256 ); \
+	    echo "[iso] Built $$iso"; \
 	    echo "[iso] Written to $(DIST_DIR)/linus.iso"; \
 	    echo "[iso] Checksum: $(DIST_DIR)/linus.iso.sha256"; \
 	    $(MAKE) iso-size; \
 	else \
-	    echo "[iso] ERROR: binary.hybrid.iso not produced — check lb build output"; \
+	    echo "[iso] ERROR: no *.hybrid.iso produced — check lb build output"; \
 	    exit 1; \
 	fi
 
 iso-clean: ## Purge all live-build artifacts (chroot, binary, cache)
 	@echo "[iso] Cleaning..."
 	@lb clean --purge 2>/dev/null || true
-	@rm -f binary.hybrid.iso $(DIST_DIR)/linus.iso
+	@rm -f *.hybrid.iso $(DIST_DIR)/linus.iso
 
 iso-size: ## Report ISO size against the $(ISO_SIZE_BUDGET_MIB) MiB budget
 	@if [ -f $(DIST_DIR)/linus.iso ]; then \

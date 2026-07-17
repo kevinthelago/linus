@@ -44,9 +44,12 @@ xdg-desktop-portal-wlr
 xdg-desktop-portal-gtk
 
 # --- Session plumbing ---
+# NB: the daemon is `polkitd` on trixie (it was renamed from `polkit` in bookworm),
+# and `policykit-1-gnome` no longer exists — mate-polkit is the GTK authentication
+# agent that pairs with wlroots compositors like sway.
 dbus-user-session
-polkit
-policykit-1-gnome
+polkitd
+mate-polkit
 xdg-utils
 
 # --- Fonts ---

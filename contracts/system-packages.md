@@ -79,7 +79,8 @@ Update `SNAPSHOT` in `mk/apt.mk` and both files together when intentionally adva
 | `xdg-desktop-portal` | `>= 1.18` | trixie snapshot | Portal framework (file dialogs, screen capture, etc.) |
 | `xdg-desktop-portal-wlr` | `>= 0.7` | trixie snapshot | Wayland (wlroots) portal backend |
 | `xdg-desktop-portal-gtk` | `>= 1.15` | trixie snapshot | GTK file-chooser portal backend |
-| `polkit-gnome` | any | trixie snapshot | Authentication agent (pkexec GUI prompts) |
+| `polkitd` | any | trixie snapshot | polkit daemon (renamed from `polkit` in bookworm) |
+| `mate-polkit` | any | trixie snapshot | Authentication agent (pkexec GUI prompts). `polkit-gnome`/`policykit-1-gnome` do not exist in trixie |
 | `xdg-utils` | any | trixie snapshot | `xdg-open` and MIME helpers |
 
 ---

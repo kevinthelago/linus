@@ -14,6 +14,10 @@ MANTLE_BUILD_DIR := dist/.build/mantle-src
 MANTLE_STAGE_DIR := dist/.stage/mantle-repack
 MANTLE_DIST_DIR  := dist/packages
 MANTLE_PKG_DIR   := packaging/mantle
+# Tauri stamps a bare "mantle" as Maintainer, which lintian rejects
+# (malformed-contact). The repack rewrites it to this and reuses it for the
+# generated changelog trailer.
+MANTLE_MAINTAINER := linus project <linus@example.com>
 
 .PHONY: mantle-deb mantle-fallback-deb mantle-clean
 
@@ -63,7 +67,23 @@ mantle-deb:
 	\
 	sed -i "s|^Version:.*|Version: $$LINUS_VER|" $(MANTLE_STAGE_DIR)/DEBIAN/control; \
 	\
-	EXTRA="pipewire, wireplumber, network-manager, upower, xdg-desktop-portal, xdg-desktop-portal-wlr"; \
+	if ! grep -q '^Section:' $(MANTLE_STAGE_DIR)/DEBIAN/control; then \
+		echo "==> Injecting Section (Tauri omits it; reprepro refuses such packages)"; \
+		sed -i '/^Package:/a Section: x11' $(MANTLE_STAGE_DIR)/DEBIAN/control; \
+	fi; \
+	\
+	echo "==> Normalising Maintainer (Tauri emits a bare name; lintian: malformed-contact)"; \
+	sed -i "s|^Maintainer:.*|Maintainer: $(MANTLE_MAINTAINER)|" $(MANTLE_STAGE_DIR)/DEBIAN/control; \
+	\
+	echo "==> Adding changelog + copyright (Tauri ships neither; lintian refuses)"; \
+	mkdir -p $(MANTLE_STAGE_DIR)/usr/share/doc/mantle; \
+	printf 'mantle (%s) trixie; urgency=medium\n\n  * linus repack of mantle at %s.\n\n -- %s  %s\n' \
+		"$$LINUS_VER" "$$PIN" "$(MANTLE_MAINTAINER)" "$$(date -R)" \
+		| gzip -9n > $(MANTLE_STAGE_DIR)/usr/share/doc/mantle/changelog.gz; \
+	printf 'Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/\nUpstream-Name: mantle\nSource: %s\n\nFiles: *\nCopyright: mantle authors\nLicense: MIT\n\nFiles: debian/*\nCopyright: linus project\nLicense: MIT\n' \
+		"$(MANTLE_REPO)" > $(MANTLE_STAGE_DIR)/usr/share/doc/mantle/copyright; \
+	\
+	EXTRA="libc6, pipewire, wireplumber, network-manager, upower, xdg-desktop-portal, xdg-desktop-portal-wlr"; \
 	ORIG=$$(dpkg-deb -f "$$TAURI_DEB" Depends | tr -d '\n'); \
 	if [ -n "$$ORIG" ]; then \
 		sed -i "s|^Depends:.*|Depends: $$ORIG, $$EXTRA|" $(MANTLE_STAGE_DIR)/DEBIAN/control; \

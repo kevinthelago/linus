@@ -3,6 +3,7 @@ Version: 0.1.0
 Architecture: all
 Maintainer: linus project <linus@example.com>
 Depends: greetd, gtkgreet, cage, linus-session
+Replaces: greetd
 Section: x11
 Priority: optional
 Description: linus greeter configuration (greetd + gtkgreet)

@@ -1,4 +1,11 @@
 #!/usr/bin/make -f
+
+# The branding assets live at the repo root (branding/), but mk/branding.mk runs
+# dpkg-buildpackage from packaging/branding/ — so a bare "branding/..." resolves to
+# packaging/branding/branding/... and every install fails. Anchor the source paths
+# to the repo root relative to this package dir.
+SRC := $(CURDIR)/../../branding
+
 %:
 	dh $@
 
@@ -7,56 +14,56 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	# os-release
-	install -Dm644 branding/os-release \
+	install -Dm644 $(SRC)/os-release \
 		debian/linus-branding/etc/os-release
-	install -Dm644 branding/os-release \
+	install -Dm644 $(SRC)/os-release \
 		debian/linus-branding/usr/lib/os-release
 
 	# Plymouth theme
-	install -Dm644 branding/plymouth/linus/linus.plymouth \
+	install -Dm644 $(SRC)/plymouth/linus/linus.plymouth \
 		debian/linus-branding/usr/share/plymouth/themes/linus/linus.plymouth
-	install -Dm644 branding/plymouth/linus/linus.script \
+	install -Dm644 $(SRC)/plymouth/linus/linus.script \
 		debian/linus-branding/usr/share/plymouth/themes/linus/linus.script
 
 	# Wallpaper — canonical .svg at the stable path gtkgreet CSS references
-	install -Dm644 branding/wallpaper/default.svg \
+	install -Dm644 $(SRC)/wallpaper/default.svg \
 		debian/linus-branding/usr/share/backgrounds/linus/default.svg
 	# Keep the named copy so other tools can discover it by name
-	install -Dm644 branding/wallpaper/default.svg \
+	install -Dm644 $(SRC)/wallpaper/default.svg \
 		debian/linus-branding/usr/share/backgrounds/linus/linus-default.svg
 
 	# Icons / logo (hicolor)
-	install -Dm644 branding/icons/linus-logo.svg \
+	install -Dm644 $(SRC)/icons/linus-logo.svg \
 		debian/linus-branding/usr/share/icons/hicolor/scalable/apps/linus-logo.svg
-	install -Dm644 branding/icons/linus-logo-16.svg \
+	install -Dm644 $(SRC)/icons/linus-logo-16.svg \
 		debian/linus-branding/usr/share/icons/hicolor/16x16/apps/linus-logo.svg
-	install -Dm644 branding/icons/linus-logo-32.svg \
+	install -Dm644 $(SRC)/icons/linus-logo-32.svg \
 		debian/linus-branding/usr/share/icons/hicolor/32x32/apps/linus-logo.svg
 
 	# gtkgreet branding override
-	install -Dm644 branding/gtkgreet/style.css \
+	install -Dm644 $(SRC)/gtkgreet/style.css \
 		debian/linus-branding/usr/share/linus/branding-greetd.css
 
 	# Mantle default theme — skel (per-user copy on first login)
-	install -Dm644 branding/mantle/config.toml \
+	install -Dm644 $(SRC)/mantle/config.toml \
 		debian/linus-branding/etc/skel/.config/mantle/config.toml
-	install -Dm644 branding/mantle/theme/tokens.css \
+	install -Dm644 $(SRC)/mantle/theme/tokens.css \
 		debian/linus-branding/etc/skel/.config/mantle/theme/tokens.css
-	install -Dm644 branding/mantle/theme/overrides.css \
+	install -Dm644 $(SRC)/mantle/theme/overrides.css \
 		debian/linus-branding/etc/skel/.config/mantle/theme/overrides.css
 
 	# Mantle default theme — system fallback
-	install -Dm644 branding/mantle/config.toml \
+	install -Dm644 $(SRC)/mantle/config.toml \
 		debian/linus-branding/etc/mantle/config.toml
-	install -Dm644 branding/mantle/theme/tokens.css \
+	install -Dm644 $(SRC)/mantle/theme/tokens.css \
 		debian/linus-branding/etc/mantle/theme/tokens.css
-	install -Dm644 branding/mantle/theme/overrides.css \
+	install -Dm644 $(SRC)/mantle/theme/overrides.css \
 		debian/linus-branding/etc/mantle/theme/overrides.css
 
 	# GRUB branding fragment + graphical theme
-	install -Dm644 branding/grub/linus-grub.cfg \
+	install -Dm644 $(SRC)/grub/linus-grub.cfg \
 		debian/linus-branding/usr/share/linus/grub/linus-grub.cfg
-	install -Dm644 branding/grub/theme/theme.txt \
+	install -Dm644 $(SRC)/grub/theme/theme.txt \
 		debian/linus-branding/usr/share/grub/themes/linus/theme.txt
 
 override_dh_installchangelogs:

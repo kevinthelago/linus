@@ -9,10 +9,14 @@ Vcs-Git: https://github.com/kevinthelago/linus.git -b packaging
 Vcs-Browser: https://github.com/kevinthelago/linus
 Rules-Requires-Root: no
 
+# libgtk-layer-shell0: mantle is a wlr-layer-shell client and links it at runtime,
+# but Tauri's auto-detected Depends only cover the webview, so it must be pulled
+# explicitly here or the shell cannot start.
 Package: linus-desktop
 Architecture: all
 Depends: ${misc:Depends},
  mantle,
+ libgtk-layer-shell0,
  linus-session,
  linus-greeter,
  sway,
@@ -29,7 +33,8 @@ Depends: ${misc:Depends},
  upower,
  xdg-desktop-portal,
  xdg-desktop-portal-wlr,
- polkit-gnome,
+ polkitd,
+ mate-polkit,
  foot,
  fonts-noto,
  fonts-noto-color-emoji
