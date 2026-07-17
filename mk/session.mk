@@ -62,11 +62,17 @@ session-stage: packaging/session/linus-session/DEBIAN/control
 	cp session/portals/sway.portals        $(SESSION_STAGEDIR)/usr/share/xdg-desktop-portal/portals/
 	cp session/portals/Hyprland.portals    $(SESSION_STAGEDIR)/usr/share/xdg-desktop-portal/portals/
 
-	# Default mantle config + theme — skeleton for new users
-	cp session/skel/.config/mantle/config.toml $(SESSION_STAGEDIR)/etc/skel/.config/mantle/
+	# Default mantle theme — skeleton for new users, plus a system-wide fallback
+	# for existing ones.
+	#
+	# NB: config.toml is deliberately NOT shipped here. linus-branding owns
+	# mantle's default config ("default mantle theme tokens and config" per its
+	# description) and installs it to these same two paths — shipping it from both
+	# packages makes dpkg abort the unpack:
+	#   trying to overwrite '/etc/mantle/config.toml', which is also in package
+	#   linus-branding
+	# Exactly one package must own each file.
 	cp session/skel/.config/mantle/theme.toml  $(SESSION_STAGEDIR)/etc/skel/.config/mantle/
-	# Also ship to /etc/mantle/ as the system-wide fallback for existing users
-	cp session/skel/.config/mantle/config.toml $(SESSION_STAGEDIR)/etc/mantle/
 	cp session/skel/.config/mantle/theme.toml  $(SESSION_STAGEDIR)/etc/mantle/
 
 session-clean:
