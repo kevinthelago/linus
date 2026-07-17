@@ -17,11 +17,29 @@ SNAPSHOT_SEC="http://snapshot.debian.org/archive/debian-security/${SNAPSHOT_DATE
 
 # Generate linus apt archive source and package list if a repo URL is provided.
 # The linus apt repo uses codename "trixie", component "main".
-mkdir -p config/archives config/package-lists
+mkdir -p config/archives config/package-lists config/packages.chroot
 if [ -n "${LINUS_REPO_URL:-}" ]; then
-    printf 'deb [trusted=yes] %s trixie main\n' "${LINUS_REPO_URL}" \
-        > config/archives/linus.list.chroot
-    # Install the full linus desktop stack from the apt repo.
+    case "${LINUS_REPO_URL}" in
+        file://*)
+            # A file:// repo is NOT reachable from inside the live-build chroot, so an
+            # apt source pointing at it silently installs nothing and the ISO ships
+            # without the desktop. Stage the .debs into packages.chroot instead —
+            # live-build builds a local apt repo from those that the chroot CAN resolve.
+            # (An apt source is also wrong for a local path: it would follow the image
+            # onto the installed system and dangle.)
+            echo "[auto/config] Local repo detected — staging .debs into packages.chroot"
+            find "${LINUS_REPO_URL#file://}/pool" -name '*.deb' -exec cp {} config/packages.chroot/ \; 2>/dev/null || true
+            echo "[auto/config] Staged $(find config/packages.chroot -name '*.deb' | wc -l) local .deb(s)"
+            rm -f config/archives/linus.list.chroot
+            ;;
+        *)
+            # A real (http/https) repo: wire it in as an apt source so the installed
+            # system keeps receiving linus updates.
+            printf 'deb [trusted=yes] %s trixie main\n' "${LINUS_REPO_URL}" \
+                > config/archives/linus.list.chroot
+            ;;
+    esac
+    # Install the full linus desktop stack (resolved from whichever source above).
     printf 'linus-desktop\nlinus-branding\n' \
         > config/package-lists/linus-packages.list.chroot
 else
@@ -29,12 +47,15 @@ else
     rm -f config/package-lists/linus-packages.list.chroot
 fi
 
+# NB: --bootloaders takes live-build's names (grub-legacy|grub-pc|syslinux|grub-efi).
+# "grub-efi-amd64" is the Debian *package* name and lb rejects it outright.
 lb config noauto \
     --distribution             trixie \
     --architecture             amd64 \
     --binary-images            iso-hybrid \
-    --bootloaders              "syslinux,grub-efi-amd64" \
+    --bootloaders              "syslinux,grub-efi" \
     --debian-installer         none \
+    --bootappend-live          "boot=live components quiet splash console=tty0 console=ttyS0,115200" \
     --iso-application          "linus" \
     --iso-publisher            "linus project <https://github.com/kevinthelago/linus>" \
     --iso-volume               "LINUS_LIVE" \
